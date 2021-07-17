@@ -42,3 +42,9 @@ Repulse Cell - Applies a pushing force in all 4 directions. <br>
 
 Weight Cell - This cell will effectively remove the force from one mover that is trying to push it. They will stack with each other. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050791-9d8e1397-cad7-4137-97a1-e8d5bb40f2cf.png)
+
+Cross Generator Cell - Clones in two directions <br>
+![image](https://user-images.githubusercontent.com/71151507/126051500-9b347b2a-0b6a-44c6-adfa-714374a4958f.png)
+
+Strong Enemy Cell - An enemy cell that takes two hits to kill <br>
+![image](https://user-images.githubusercontent.com/71151507/126051507-b1d115c5-bcc6-41af-8f70-b32fbb13d633.png)
