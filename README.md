@@ -24,7 +24,7 @@ Mirror Cell - Swaps the cells that it's arrows point to. <br>
 Puller Cell - Pulls cells. Does not push cells. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050778-88e20293-cea0-4c5c-a925-e1a74ae26202.png)
 
-Diverger Cell - Any forces that come into the sides which the arrows point to get rotated 90° and teleported to the end of the diverger. Quite buggy, dont be too surprised if a crash can happen. If an infinite loop slips by but is detected as it happens, it will stop the loop and create a trash cell, for debugging purposes. <br>
+Diverger Cell - Any forces that come into the sides which the arrows point to get rotated 90° and teleported to the end of the diverger. In specific circumstances, it might bug, but I have done my best to prevent this; if an infinite loop slips by but is detected as it happens, it will stop the loop and create a trash cell, for debugging purposes. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050780-6e618371-dfce-4482-b580-87d5b6cac04b.png)
 
 Redirector Cell - Replaces the rotation of the 4 cells it touches with it's own rotation. <br>
