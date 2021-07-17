@@ -1,14 +1,14 @@
 # CelLua-Machine
 A fanmade version of Sam Hogan's Cell Machine, based heavily off the Mystic Mod, that adds a bunch of new cells.
-# Running
+## Running
 1. Download a release, preferably the latest one (should be a .love file)
 2. Download and install LOVE at https://love2d.org
 3. Double-click the .love file (might not work on all OS, for more info see https://love2d.org/wiki/Getting_Started#Running_Games)
-# Distributing your own version
+## Distributing your own version
 1. Create a zip file of the whole game directory (make sure the zip contains the files and *not* the folder OF the files)
 2. Rename the .zip to .love
 For more info see https://love2d.org/wiki/Game_Distribution#Create_a_.love-file
-# New Cells
+## New Cells
 One/Two/Three Directional - Can only be pushed towards the marked directions. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050754-adf65e40-b0f1-46d7-838a-be619b70080b.png) ![image](https://user-images.githubusercontent.com/71151507/126050761-58bd68c4-b6e1-45ed-a641-2215cd5e7efc.png) ![image](https://user-images.githubusercontent.com/71151507/126050767-433d2200-dd3a-496a-bf16-98f90d3abcb0.png)
 
