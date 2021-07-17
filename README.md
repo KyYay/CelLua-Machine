@@ -9,6 +9,9 @@ A fanmade version of Sam Hogan's Cell Machine, based heavily off the Mystic Mod,
 2. Rename the .zip to .love
 For more info see https://love2d.org/wiki/Game_Distribution#Create_a_.love-file
 ## New Cells
+Trash Cell - Deletes any cells that get pushed into it. Taken from the Mystic Mod. <br>
+![image](https://user-images.githubusercontent.com/71151507/126050831-631a3a5e-856f-418b-a6a5-0d82c4834672.png)
+
 One/Two/Three Directional - Can only be pushed towards the marked directions. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050754-adf65e40-b0f1-46d7-838a-be619b70080b.png) ![image](https://user-images.githubusercontent.com/71151507/126050761-58bd68c4-b6e1-45ed-a641-2215cd5e7efc.png) ![image](https://user-images.githubusercontent.com/71151507/126050767-433d2200-dd3a-496a-bf16-98f90d3abcb0.png)
 
