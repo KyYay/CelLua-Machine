@@ -46,10 +46,9 @@ Weight Cell - This cell will effectively remove the force from one mover that is
 Cross Generator Cell - Clones in two directions. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126051500-9b347b2a-0b6a-44c6-adfa-714374a4958f.png)
 
-Current priority system (updating from left to right)
-![image](https://user-images.githubusercontent.com/71151507/126054774-0eee13c1-0f38-4021-84cd-e92d24c233e3.png)
-(Cross generators are like normal generators but are activated in two different subticks)
-
-
 Strong Enemy Cell - An enemy cell that takes two hits to kill. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126051507-b1d115c5-bcc6-41af-8f70-b32fbb13d633.png)
+
+Current priority system (updating from left to right) <br>
+![image](https://user-images.githubusercontent.com/71151507/126054774-0eee13c1-0f38-4021-84cd-e92d24c233e3.png) <br>
+(Cross generators are like normal generators but are activated in two different subticks)
