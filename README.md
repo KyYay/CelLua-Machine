@@ -58,4 +58,4 @@ Angled Generators - Generate at an angle. Rotation of the generated cell will be
 
 Current priority system (updating from left to right) <br>
 ![image](https://user-images.githubusercontent.com/71151507/126085324-429f7010-0e01-4a65-8bb9-067605c39061.png) <br>
-(Cross generators are like normal generators but are activated in two different subticks, and angled generators are both updated and are after normal/cross generators)
+(Cross generators are like normal generators but are activated in two different subticks, and angled generators are both updated after normal/cross generators)
