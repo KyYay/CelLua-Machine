@@ -50,5 +50,5 @@ Strong Enemy Cell - An enemy cell that takes two hits to kill. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126051507-b1d115c5-bcc6-41af-8f70-b32fbb13d633.png)
 
 Current priority system (updating from left to right) <br>
-![image](https://user-images.githubusercontent.com/71151507/126054774-0eee13c1-0f38-4021-84cd-e92d24c233e3.png) <br>
+![image](https://user-images.githubusercontent.com/71151507/126054817-cdc45a4f-b992-4a94-a180-5df14aa26c3c.png) <br>
 (Cross generators are like normal generators but are activated in two different subticks)
