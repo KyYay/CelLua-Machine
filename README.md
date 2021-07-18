@@ -49,6 +49,13 @@ Cross Generator Cell - Clones in two directions. <br>
 Strong Enemy Cell - An enemy cell that takes two hits to kill. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126051507-b1d115c5-bcc6-41af-8f70-b32fbb13d633.png)
 
+Freezer Cell - Stops adjacent cells from preforming their actions. Other cells will still treat them as normal.
+![image](https://user-images.githubusercontent.com/71151507/126085318-05b7deb2-c27e-4117-b918-bf7f501080e3.png)
+
+Angled Generators - Generate at an angle. Rotation of the generated cell will be affected.
+![image](https://user-images.githubusercontent.com/71151507/126085128-11d6900b-ba94-4275-9d5b-9bd95307cbd1.png)
+![image](https://user-images.githubusercontent.com/71151507/126085129-7a778814-2352-4d35-89d4-4ec5b4119da9.png)
+
 Current priority system (updating from left to right) <br>
-![image](https://user-images.githubusercontent.com/71151507/126054817-cdc45a4f-b992-4a94-a180-5df14aa26c3c.png) <br>
+![image](https://user-images.githubusercontent.com/71151507/126085324-429f7010-0e01-4a65-8bb9-067605c39061.png) <br>
 (Cross generators are like normal generators but are activated in two different subticks)
