@@ -27,7 +27,7 @@ Puller Cell - Pulls cells. Does not push cells. <br>
 Diverger Cell - Any forces that come into the sides which the arrows point to get rotated 90° and teleported to the end of the diverger. In specific circumstances, it might bug, but I have done my best to prevent this; if an infinite loop slips by but is detected as it happens, it will stop the loop and create a trash cell, for debugging purposes. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050780-6e618371-dfce-4482-b580-87d5b6cac04b.png)
 
-Redirector Cell - Replaces the rotation of the 4 cells it touches with it's own rotation. <br>
+Redirector Cell - Sets the rotation of the 4 cells it touches with it's own rotation. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050783-5fd81eeb-c7f5-433a-b894-36390eb88dfe.png)
 
 Gear Cell - Grabs the 8 cells nearby and rotates them 45 degrees around itself. Cells going from diagonally adjacent to orthogonally adjacent will have their rotation adjusted. <br>
@@ -45,6 +45,11 @@ Weight Cell - This cell will effectively remove the force from one mover that is
 
 Cross Generator Cell - Clones in two directions. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126051500-9b347b2a-0b6a-44c6-adfa-714374a4958f.png)
+
+Current priority system (updating from left to right)
+![image](https://user-images.githubusercontent.com/71151507/126054774-0eee13c1-0f38-4021-84cd-e92d24c233e3.png)
+(Cross generators are like normal generators but are activated in two different subticks)
+
 
 Strong Enemy Cell - An enemy cell that takes two hits to kill. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126051507-b1d115c5-bcc6-41af-8f70-b32fbb13d633.png)
