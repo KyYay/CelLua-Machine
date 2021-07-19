@@ -6,7 +6,7 @@ A fanmade version of Sam Hogan's Cell Machine, based heavily off the Mystic Mod,
 3. Double-click the .love file (might not work on all OS, for more info see https://love2d.org/wiki/Getting_Started#Running_Games)
 ## Sharing Levels
 If you use an app or website to share levels that has markdown, like Discord, use some method of supressing it, otherwise it's possible that the code will not be posted properly. The easiest way with Discord is to surround your code in two \` marks.
-## Compiling
+## Compiling mods
 1. Create a zip file of the whole game directory (make sure the zip contains the files and *not* the folder OF the files)
 2. Rename the .zip to .love <br>
 For more info see https://love2d.org/wiki/Game_Distribution#Create_a_.love-file
