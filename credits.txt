@@ -1,0 +1,21 @@
+The people who created the ideas for the cells currenly in game (and that weren't in Mystic Mod already):
+
+180 Rotator, Puller, Generator variants, Slide cell variants - Too general of an idea to give credit to any specific person
+
+Freezer Cell - Came up on my own
+
+Gear Cell - Inspired by Sam Hogan's original idea for the Rotator Cell ("grabs and spins cells around it")
+
+Mold Cell - i fell onto water and died#7501 (although i couldn't make it pass-through sorry)
+
+Strong Enemy - Blendi Goose#0414 (or at least he's the person who finally convinced me to add it)
+
+Diverger Cell (renamed from Redirector) - blaumeise20#4088
+
+Repulsor Cell - fanhalo#6922
+
+Redirector Cell - HeavenlyMessiah#4604
+
+Mirror Cell - Fowo Vinvalut#8835
+
+Weight Cell (renamed from "condition cell") - Spunky_Dollish_2#6870
