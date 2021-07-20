@@ -65,5 +65,5 @@ Advancer Cell - Acts like a mover and puller combined. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126256042-04006b8b-500b-428b-82d2-e10dbd3d3c98.png)
 
 Current priority system (updating from left to right) <br>
-![image](https://user-images.githubusercontent.com/71151507/126255985-2256e717-bf5e-49b1-91bc-0336ba691e16.png) <br>
+![image](https://user-images.githubusercontent.com/71151507/126304838-5a2128d3-b216-43ae-b0fe-5c651c8ce7ce.png) <br>
 (Cross generators are like normal generators but are activated in two different subticks, and angled generators are both updated after normal/cross generators)
