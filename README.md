@@ -69,5 +69,5 @@ Flipper Cell - Will effectively "flip" the 4 neighboring cells horizontally or v
 
 
 Current priority system (updating from left to right) <br>
-![image](https://user-images.githubusercontent.com/71151507/126255985-2256e717-bf5e-49b1-91bc-0336ba691e16.png) <br>
+![image](https://user-images.githubusercontent.com/71151507/126307831-126d272a-a181-4b7b-9125-d829afb7a11f.png) <br>
 (Cross generators are like normal generators but are activated in two different subticks, and angled generators are both updated after normal/cross generators)
