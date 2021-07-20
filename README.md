@@ -58,10 +58,10 @@ Angled Generators - Generate at an angle. Rotation of the generated cell will be
 ![image](https://user-images.githubusercontent.com/71151507/126085128-11d6900b-ba94-4275-9d5b-9bd95307cbd1.png)
 ![image](https://user-images.githubusercontent.com/71151507/126085129-7a778814-2352-4d35-89d4-4ec5b4119da9.png)
 
-Impulse Cell - Pulls cells inwards, towards it.
+Impulse Cell - Pulls cells inwards, towards it. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126256021-7ad374ce-d851-4522-a8b8-438a2306bc69.png)
 
-Advancer Cell - Acts like a mover and puller combined.
+Advancer Cell - Acts like a mover and puller combined. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126256042-04006b8b-500b-428b-82d2-e10dbd3d3c98.png)
 
 Current priority system (updating from left to right) <br>
