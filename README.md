@@ -64,6 +64,10 @@ Impulse Cell - Pulls cells 2 spaces away towards it. Can pull through trash cell
 Advancer Cell - Acts like a mover and puller combined. They are also, in a way, "smarter" than pullers, as if there is too much force going against them when they try to pull, they will just let go and only do the pushing.<br>
 ![image](https://user-images.githubusercontent.com/71151507/126256042-04006b8b-500b-428b-82d2-e10dbd3d3c98.png)
 
+Flipper Cell - Will effectively "flip" the 4 neighboring cells horizontally or vertically, depending on it's own rotation. "Flipping" includes turning clockwise cells into counter-clockwise cells, and vice versa.<br>
+![image](https://user-images.githubusercontent.com/71151507/126307519-0dea882f-cb75-4082-8b86-8ac5a3cef3ea.png)
+
+
 Current priority system (updating from left to right) <br>
 ![image](https://user-images.githubusercontent.com/71151507/126255985-2256e717-bf5e-49b1-91bc-0336ba691e16.png) <br>
 (Cross generators are like normal generators but are activated in two different subticks, and angled generators are both updated after normal/cross generators)
