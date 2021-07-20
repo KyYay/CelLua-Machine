@@ -61,7 +61,7 @@ Angled Generators - Generate at an angle. Rotation of the generated cell will be
 Impulse Cell - Pulls cells inwards, towards it. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126256021-7ad374ce-d851-4522-a8b8-438a2306bc69.png)
 
-Advancer Cell - Acts like a mover and puller combined. <br>
+Advancer Cell - Acts like a mover and puller combined. They are also, in a way, "smarter" than pullers, as if there is too much force going against them when they try to pull, they will just let go and only do the pushing.<br>
 ![image](https://user-images.githubusercontent.com/71151507/126256042-04006b8b-500b-428b-82d2-e10dbd3d3c98.png)
 
 Current priority system (updating from left to right) <br>
