@@ -192,16 +192,20 @@ V3Cells["{"] = {0,0,false} V3Cells["}"] = {0,0,true}
 V3Cells["^"] = {0,0,false}
 
 local function CellToNum(y,x,hasplaceables)
-	if x >= 0 and y >= 0 and x < width and y < height then
+	if x >= 1 and y >= 1 and x < width-1 and y < height-1 then
 		if hasplaceables then
-			if cells[y][x].ctype == 0 then
-				return 8 + ((placeables[y][x] and 1) or 0) --no rotation
+			if cells[y][x].ctype == 0 or cells[y][x].ctype == -1 or cells[y][x].ctype == 4 or cells[y][x].ctype == 11 or cells[y][x].ctype == 12 or cells[y][x].ctype == 23
+			or cells[y][x].ctype == 20 or cells[y][x].ctype == 28 or cells[y][x].ctype == 21 or cells[y][x].ctype == 24 or cells[y][x].ctype == 8 or cells[y][x].ctype == 9
+			or cells[y][x].ctype == 10 or cells[y][x].ctype == 19 or cells[y][x].ctype == 17 or cells[y][x].ctype == 18 then	--cells who dont care about rotations
+				return (cells[y][x].ctype+1)*8 + ((placeables[y][x] and 1) or 0)
 			else
 				return (cells[y][x].ctype+1)*8 + cells[y][x].rot*2 + ((placeables[y][x] and 1) or 0)
 			end
 		else
-			if cells[y][x].ctype == 0 then
-				return 4
+			if cells[y][x].ctype == 0 or cells[y][x].ctype == -1 or cells[y][x].ctype == 4 or cells[y][x].ctype == 11 or cells[y][x].ctype == 12 or cells[y][x].ctype == 23
+			or cells[y][x].ctype == 20 or cells[y][x].ctype == 28 or cells[y][x].ctype == 21 or cells[y][x].ctype == 24 or cells[y][x].ctype == 8 or cells[y][x].ctype == 9
+			or cells[y][x].ctype == 10 or cells[y][x].ctype == 19 or cells[y][x].ctype == 17 or cells[y][x].ctype == 18 then	--cells who dont care about rotations
+				return (cells[y][x].ctype+1)*4 + ((placeables[y][x] and 1) or 0)
 			else
 				return (cells[y][x].ctype+1)*4 + cells[y][x].rot
 			end
@@ -361,7 +365,7 @@ local function DecodeK1(code)
 			storedstring = storedstring..string.sub(code,currentcharacter,currentcharacter) 
 		end
 	end
-	width = unbase84(storedstring)+2
+	width = math.min(unbase84(storedstring)+2,502)
 	storedstring = ""
 	while true do
 		currentcharacter = currentcharacter + 1
@@ -371,7 +375,7 @@ local function DecodeK1(code)
 			storedstring = storedstring..string.sub(code,currentcharacter,currentcharacter) 
 		end
 	end
-	height = unbase84(storedstring)+2
+	height = math.min(unbase84(storedstring)+2,502)
 	local hasplaceables
 	if string.sub(code,currentcharacter+1,currentcharacter+1) == "0" then
 		hasplaceables = false
@@ -563,7 +567,7 @@ local function EncodeK1()
 	while currentcell <= (width-2)*(height-2) do
 		if currentloopmode ~= "break" and CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-2)/(width-2)+1),(currentcell-2)%(width-2)+1,hasplaceables) and				--if the next 2 cells are the same as the last 5 cells, compress
 		CellToNum(math.floor((currentcell+1)/(width-2)+1),(currentcell+1)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-1)/(width-2)+1),(currentcell-1)%(width-2)+1,hasplaceables) and
-		reps < 7396 then
+		reps < 7055 then
 			if currentloopmode == 2 or currentloopmode == false then
 				if reps == 0 then
 					result = result..")"
@@ -577,7 +581,7 @@ local function EncodeK1()
 		elseif currentloopmode ~= "break" and CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-3)/(width-2)+1),(currentcell-3)%(width-2)+1,hasplaceables) and				--or the next 3
 		CellToNum(math.floor((currentcell+1)/(width-2)+1),(currentcell+1)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-2)/(width-2)+1),(currentcell-2)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+2)/(width-2)+1),(currentcell+2)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-1)/(width-2)+1),(currentcell-1)%(width-2)+1,hasplaceables) and
-		reps < 7396 then
+		reps < 7055 then
 			if currentloopmode == 3 or currentloopmode == false then
 				if reps == 0 then
 					result = result.."]"
@@ -592,7 +596,7 @@ local function EncodeK1()
 		CellToNum(math.floor((currentcell+1)/(width-2)+1),(currentcell+1)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-3)/(width-2)+1),(currentcell-3)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+2)/(width-2)+1),(currentcell+2)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-2)/(width-2)+1),(currentcell-2)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+3)/(width-2)+1),(currentcell+3)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-1)/(width-2)+1),(currentcell-1)%(width-2)+1,hasplaceables) and
-		reps < 7396 then
+		reps < 7055 then
 			if currentloopmode == 4 or currentloopmode == false then
 				if reps == 0 then
 					result = result.."["
@@ -608,7 +612,7 @@ local function EncodeK1()
 		CellToNum(math.floor((currentcell+2)/(width-2)+1),(currentcell+2)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-3)/(width-2)+1),(currentcell-3)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+3)/(width-2)+1),(currentcell+3)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-2)/(width-2)+1),(currentcell-2)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+4)/(width-2)+1),(currentcell+4)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-1)/(width-2)+1),(currentcell-1)%(width-2)+1,hasplaceables) and
-		reps < 7396 then
+		reps < 7055 then
 			if currentloopmode == 5 or currentloopmode == false then
 				if reps == 0 then
 					result = result..">"
@@ -625,7 +629,7 @@ local function EncodeK1()
 		CellToNum(math.floor((currentcell+3)/(width-2)+1),(currentcell+3)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-3)/(width-2)+1),(currentcell-3)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+4)/(width-2)+1),(currentcell+4)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-2)/(width-2)+1),(currentcell-2)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+5)/(width-2)+1),(currentcell+5)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-1)/(width-2)+1),(currentcell-1)%(width-2)+1,hasplaceables) and
-		reps < 7396 then
+		reps < 7055 then
 			if currentloopmode == 6 or currentloopmode == false then
 				if reps == 0 then
 					result = result.."<"
@@ -2210,7 +2214,7 @@ function love.draw()
 		love.graphics.draw(tex[10],300*winxm,450*winym,0,3*winxm,3*winym,10,10)
 		if x > 370 and y > 420 and x < 430 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Clear level",369*winxm,480*winym,0,winxm,winym) else love.graphics.setColor(1,1,1,0.5) end
 		love.graphics.draw(tex[11],400*winxm,450*winym,0,3*winxm,3*winym,10,10)
-		if x > 470 and y > 420 and x < 530 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Save level\n (Ctrl+S)",470*winxm,480*winym,0,winxm,winym) else love.graphics.setColor(1,1,1,0.5) end
+		if x > 470 and y > 420 and x < 530 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Save level",470*winxm,480*winym,0,winxm,winym) else love.graphics.setColor(1,1,1,0.5) end
 		love.graphics.draw(tex[2],500*winxm,450*winym,math.pi*1.5,3*winym,3*winxm,10,10)
 		if x > 570 and y > 420 and x < 630 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Load level\n  (V3/K1)",570*winxm,480*winym,0,winxm,winym)  else love.graphics.setColor(1,1,1,0.5) end
 		love.graphics.draw(tex[16],600*winxm,450*winym,math.pi*0.5,3*winym,3*winxm,10,10)
@@ -2395,10 +2399,10 @@ function love.mousepressed(x,y,b)
 			for y=0,selh do
 				for x=0,selw do
 					copied[y][x].ctype = lastcop[y][selw-x].ctype
-					if lastcop[y][selw-x].ctype == 8 then copied[y][x].ctype = 9 
-					elseif lastcop[y][selw-x].ctype == 9 then copied[y][x].ctype = 8 
-					elseif lastcop[y][selw-x].ctype == 17 then copied[y][x].ctype = 18
-					elseif lastcop[y][selw-x].ctype == 18 then copied[y][x].ctype = 17 
+					if lastcop[y][selw-x].ctype == 8 then copied[y][x].ctype = 9 copied[y][x].rot = lastcop[y][selw-x].rot
+					elseif lastcop[y][selw-x].ctype == 9 then copied[y][x].ctype = 8 copied[y][x].rot = lastcop[y][selw-x].rot
+					elseif lastcop[y][selw-x].ctype == 17 then copied[y][x].ctype = 18 copied[y][x].rot = lastcop[y][selw-x].rot
+					elseif lastcop[y][selw-x].ctype == 18 then copied[y][x].ctype = 17 copied[y][x].rot = lastcop[y][selw-x].rot
 					elseif lastcop[y][selw-x].ctype == 25 then copied[y][x].ctype = 26 copied[y][x].rot = (-lastcop[y][selw-x].rot + 2)%4
 					elseif lastcop[y][selw-x].ctype == 26 then copied[y][x].ctype = 25 copied[y][x].rot = (-lastcop[y][selw-x].rot + 2)%4
 					elseif lastcop[y][selw-x].ctype == 6 and lastcop[y][selw-x].rot%2 == 0 then copied[y][x].rot = (lastcop[y][selw-x].rot - 1)%4
@@ -2430,10 +2434,10 @@ function love.mousepressed(x,y,b)
 			for y=0,selh do
 				for x=0,selw do
 					copied[y][x].ctype = lastcop[selh-y][x].ctype
-					if lastcop[selh-y][x].ctype == 8 then copied[y][x].ctype = 9 
-					elseif lastcop[(selh)-y][x].ctype == 9 then copied[y][x].ctype = 8 
-					elseif lastcop[(selh)-y][x].ctype == 17 then copied[y][x].ctype = 18
-					elseif lastcop[(selh)-y][x].ctype == 18 then copied[y][x].ctype = 17 
+					if lastcop[selh-y][x].ctype == 8 then copied[y][x].ctype = 9 copied[y][x].rot = lastcop[selh-y][x].rot
+					elseif lastcop[(selh)-y][x].ctype == 9 then copied[y][x].ctype = 8 copied[y][x].rot = lastcop[selh-y][x].rot
+					elseif lastcop[(selh)-y][x].ctype == 17 then copied[y][x].ctype = 18 copied[y][x].rot = lastcop[selh-y][x].rot
+					elseif lastcop[(selh)-y][x].ctype == 18 then copied[y][x].ctype = 17 copied[y][x].rot = lastcop[selh-y][x].rot
 					elseif lastcop[selh-y][x].ctype == 25 then copied[y][x].ctype = 26 copied[y][x].rot = (-lastcop[selh-y][x].rot)%4
 					elseif lastcop[selh-y][x].ctype == 26 then copied[y][x].ctype = 25 copied[y][x].rot = (-lastcop[selh-y][x].rot)%4
 					elseif lastcop[selh-y][x].ctype == 6 and lastcop[selh-y][x].rot%2 == 0 then copied[y][x].rot = (lastcop[selh-y][x].rot + 1)%4
@@ -2796,9 +2800,6 @@ function love.keypressed(key)
 	elseif key == "v" and (love.keyboard.isDown("lctrl") or love.keyboard.isDown("lgui")) and copied then
 		selecting = false
 		pasting = true
-	elseif key == "s" and (love.keyboard.isDown("lctrl") or love.keyboard.isDown("lgui")) then
-		EncodeK1()
-		love.audio.play(beep)
 	elseif key == "c" then
 		page = math.min(page+1,math.ceil(#listorder/15))
 		placecells = false
@@ -2819,7 +2820,7 @@ function love.wheelmoved(x,y)
 		end
 	elseif y < 0 then
 		for i=-1,y,-1 do
-			if zoom > 4 then
+			if zoom > 2 then
 				offx = (offx-400*winxm)*0.5
 				offy = (offy-300*winym)*0.5
 				zoom = zoom*0.5
