@@ -194,7 +194,7 @@ V3Cells["^"] = {0,0,false}
 local function CellToNum(y,x,hasplaceables)
 	if x >= 1 and y >= 1 and x < width-1 and y < height-1 then
 		if hasplaceables then
-			if cells[y][x].ctype == 0 or cells[y][x].ctype == -1 or cells[y][x].ctype == 4 or cells[y][x].ctype == 11 or cells[y][x].ctype == 12 or cells[y][x].ctype == 23
+			if cells[y][x].ctype == 0 or cells[y][x].ctype == -1 or cells[y][x].ctype == 3 or cells[y][x].ctype == 11 or cells[y][x].ctype == 12 or cells[y][x].ctype == 23
 			or cells[y][x].ctype == 20 or cells[y][x].ctype == 28 or cells[y][x].ctype == 21 or cells[y][x].ctype == 24 or cells[y][x].ctype == 8 or cells[y][x].ctype == 9
 			or cells[y][x].ctype == 10 or cells[y][x].ctype == 19 or cells[y][x].ctype == 17 or cells[y][x].ctype == 18 then	--cells who dont care about rotations
 				return (cells[y][x].ctype+1)*8 + ((placeables[y][x] and 1) or 0)
@@ -202,7 +202,7 @@ local function CellToNum(y,x,hasplaceables)
 				return (cells[y][x].ctype+1)*8 + cells[y][x].rot*2 + ((placeables[y][x] and 1) or 0)
 			end
 		else
-			if cells[y][x].ctype == 0 or cells[y][x].ctype == -1 or cells[y][x].ctype == 4 or cells[y][x].ctype == 11 or cells[y][x].ctype == 12 or cells[y][x].ctype == 23
+			if cells[y][x].ctype == 0 or cells[y][x].ctype == -1 or cells[y][x].ctype == 3 or cells[y][x].ctype == 11 or cells[y][x].ctype == 12 or cells[y][x].ctype == 23
 			or cells[y][x].ctype == 20 or cells[y][x].ctype == 28 or cells[y][x].ctype == 21 or cells[y][x].ctype == 24 or cells[y][x].ctype == 8 or cells[y][x].ctype == 9
 			or cells[y][x].ctype == 10 or cells[y][x].ctype == 19 or cells[y][x].ctype == 17 or cells[y][x].ctype == 18 then	--cells who dont care about rotations
 				return (cells[y][x].ctype+1)*4 + ((placeables[y][x] and 1) or 0)
