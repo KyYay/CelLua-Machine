@@ -28,6 +28,7 @@ Puller Cell - Pulls cells. Does not push cells. <br>
 
 Diverger Cell - Any forces that come into the sides which the arrows point to get rotated 90° and teleported to the end of the diverger. In specific circumstances, it might bug, but I have done my best to prevent this; if an infinite loop slips by but is detected as it happens, it will stop the loop and create a trash cell, for debugging purposes. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050780-6e618371-dfce-4482-b580-87d5b6cac04b.png)
+![image](https://user-images.githubusercontent.com/71151507/126437594-23d8c6c9-2389-4a0f-b4cb-ffd15b14dc73.png)
 
 Redirector Cell - Sets the rotation of the 4 cells it touches to it's own rotation. Wont affect other redirectors. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050783-5fd81eeb-c7f5-433a-b894-36390eb88dfe.png)
@@ -51,7 +52,7 @@ Cross Generator Cell - Clones in two directions. <br>
 Strong Enemy Cell - An enemy cell that takes two hits to kill. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126051507-b1d115c5-bcc6-41af-8f70-b32fbb13d633.png)
 
-Freezer Cell - Stops adjacent cells from preforming their actions. Other cells will still treat them as normal. <br>
+Freezer Cell - Stops adjacent cells from preforming their actions. Other cells will still treat them as normal. If a cell is moved next to it after it's subtick finishes, the cell will act like normal.<br>
 ![image](https://user-images.githubusercontent.com/71151507/126086251-545d9fc6-6bb9-463d-9c85-de33d05621db.png)
 
 Angled Generators - Generate at an angle. Rotation of the generated cell will be affected. <br>
