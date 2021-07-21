@@ -29,7 +29,7 @@ Puller Cell - Pulls cells. Does not push cells. <br>
 Diverger Cell - Any forces that come into the sides which the arrows point to get rotated 90° and teleported to the end of the diverger. In specific circumstances, it might bug, but I have done my best to prevent this; if an infinite loop slips by but is detected as it happens, it will stop the loop and create a trash cell, for debugging purposes. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050780-6e618371-dfce-4482-b580-87d5b6cac04b.png)
 
-Redirector Cell - Sets the rotation of the 4 cells it touches with it's own rotation. <br>
+Redirector Cell - Sets the rotation of the 4 cells it touches to it's own rotation. Wont affect other redirectors. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050783-5fd81eeb-c7f5-433a-b894-36390eb88dfe.png)
 
 Gear Cell - Grabs the 8 cells nearby and rotates them 45 degrees around itself. Cells going from diagonally adjacent to orthogonally adjacent will have their rotation adjusted. <br>
