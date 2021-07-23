@@ -24,6 +24,7 @@ tex.select = love.graphics.newImage("select.png")
 tex.copy = love.graphics.newImage("copy.png")
 tex.cut = love.graphics.newImage("cut.png")
 tex.paste = love.graphics.newImage("paste.png")
+tex.nonexistant = love.graphics.newImage("nonexistant.png")
 local listorder = {0,-2,-1,1,13,27,2,22,25,26,3,4,5,6,7,21,8,9,10,16,29,17,18,20,28,14,15,30,11,12,23,24,19}
 local bgsprites,winx,winy,winxm,winym
 local destroysound = love.audio.newSource("destroy.wav", "static")
@@ -116,7 +117,7 @@ for i=0,25 do cheatsheet[string.char(string.byte("A")+i)] = i+36 end
 cheatsheet["!"] = 62 cheatsheet["$"] = 63 cheatsheet["%"] = 64 cheatsheet["&"] = 65 cheatsheet["+"] = 66
 cheatsheet["-"] = 67 cheatsheet["."] = 68 cheatsheet["="] = 69 cheatsheet["?"] = 70 cheatsheet["^"] = 71
 cheatsheet["{"] = 72 cheatsheet["}"] = 73 cheatsheet["/"] = 74 cheatsheet["#"] = 75 cheatsheet["_"] = 76
-cheatsheet["*"] = 77 cheatsheet["'"] = 78 cheatsheet[":"] = 79 cheatsheet[","] = 90 cheatsheet["@"] = 81
+cheatsheet["*"] = 77 cheatsheet["'"] = 78 cheatsheet[":"] = 79 cheatsheet[","] = 80 cheatsheet["@"] = 81
 cheatsheet["~"] = 82 cheatsheet["|"] = 83
 for i=0,9 do cheatsheet[i] = tostring(i) end
 for i=0,25 do cheatsheet[10+i] = string.char(string.byte("a")+i) end
@@ -126,6 +127,7 @@ cheatsheet[67] = "-" cheatsheet[68] = "." cheatsheet[69] = "=" cheatsheet[70] = 
 cheatsheet[72] = "{" cheatsheet[73] = "}" cheatsheet[74] = "/" cheatsheet[75] = "#" cheatsheet[76] = "_"
 cheatsheet[77] = "*" cheatsheet[78] = "'" cheatsheet[79] = ":" cheatsheet[80] = "," cheatsheet[81] = "@"
 cheatsheet[82] = "~" cheatsheet[83] = "|"
+
 
 local function unbase74(origvalue)
 	local result = 0
@@ -168,7 +170,6 @@ local function base84(origvalue)
 	return result
 	end
 end
-
 local V3Cells = {}
 V3Cells["0"] = {2,0,false} V3Cells["i"] = {2,1,false} V3Cells["A"] = {2,2,false} V3Cells["S"] = {2,3,false}
 V3Cells["1"] = {2,0,true} V3Cells["j"] = {2,1,true} V3Cells["B"] = {2,2,true} V3Cells["T"] = {2,3,true} 
@@ -225,6 +226,7 @@ local function DecodeV3(code)
 	local currentspot = 0
 	local currentcharacter = 3 --start right after V3;
 	local storedstring = ""
+	undocells = nil
 	while true do
 		currentcharacter = currentcharacter + 1
 		if string.sub(code,currentcharacter,currentcharacter) == ";" then
@@ -365,7 +367,7 @@ local function DecodeK1(code)
 			storedstring = storedstring..string.sub(code,currentcharacter,currentcharacter) 
 		end
 	end
-	width = math.min(unbase84(storedstring)+2,502)
+	width = unbase84(storedstring)+2
 	storedstring = ""
 	while true do
 		currentcharacter = currentcharacter + 1
@@ -375,7 +377,7 @@ local function DecodeK1(code)
 			storedstring = storedstring..string.sub(code,currentcharacter,currentcharacter) 
 		end
 	end
-	height = math.min(unbase84(storedstring)+2,502)
+	height = unbase84(storedstring)+2
 	local hasplaceables
 	if string.sub(code,currentcharacter+1,currentcharacter+1) == "0" then
 		hasplaceables = false
@@ -547,9 +549,212 @@ local function DecodeK1(code)
 	isinitial = true
 end
 
-local function EncodeK1()
+
+local function DecodeK2(code)
+	local currentspot = 0
+	local currentcharacter = 3 --start right after K2;
+	local storedstring = ""
+	while true do
+		currentcharacter = currentcharacter + 1
+		if string.sub(code,currentcharacter,currentcharacter) == ";" then
+			break
+		else
+			storedstring = storedstring..string.sub(code,currentcharacter,currentcharacter) 
+		end
+	end
+	width = unbase84(storedstring)+2
+	storedstring = ""
+	while true do
+		currentcharacter = currentcharacter + 1
+		if string.sub(code,currentcharacter,currentcharacter) == ";" then
+			break
+		else
+			storedstring = storedstring..string.sub(code,currentcharacter,currentcharacter) 
+		end
+	end
+	height = unbase84(storedstring)+2
+	local hasplaceables
+	if string.sub(code,currentcharacter+1,currentcharacter+1) == "0" then
+		hasplaceables = false
+	else
+		hasplaceables = true
+	end
+	currentcharacter = currentcharacter + 2
+	for y=0,height-1 do
+		initial[y] = {}
+		placeables[y] = {}
+		cells[y] = {}
+		for x=0,width-1 do
+			initial[y][x] = {}
+			cells[y][x] = {}
+			initial[y][x].ctype = 0
+			initial[y][x].rot = 0
+			placeables[y][x] = false
+		end
+	end
+	for y=0,(height-1)/25 do
+		chunks[y] = {}
+		for x=0,(width-1)/25 do
+			chunks[y][x] = {}
+		end
+	end
+	while currentspot <= (width-2)*(height-2) do
+		currentcharacter = currentcharacter + 1
+		if string.sub(code,currentcharacter,currentcharacter) == "<" then							--duplicate arbitrary amount of cells
+			local howmany = 0
+			local howmuch = 0
+			currentcharacter = currentcharacter + 1
+			if string.sub(code,currentcharacter,currentcharacter) == "(" then
+				howmany = unbase84(string.sub(code,currentcharacter+1,currentcharacter+2))
+				currentcharacter = currentcharacter + 2
+			else
+				howmany = unbase84(string.sub(code,currentcharacter,currentcharacter))
+			end
+			currentcharacter = currentcharacter + 1
+			if string.sub(code,currentcharacter,currentcharacter) == "(" then
+				howmuch = unbase84(string.sub(code,currentcharacter+1,currentcharacter+2))*howmany
+				currentcharacter = currentcharacter + 2
+			else
+				howmuch = unbase84(string.sub(code,currentcharacter,currentcharacter))*howmany
+			end
+			local startspot = currentspot
+			local curcell = 1
+			for i=1,howmuch do
+				if curcell == 1 then
+					curcell = howmany
+				else
+					curcell = curcell - 1
+				end
+				currentspot = currentspot + 1
+				initial[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1].ctype = initial[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1].ctype
+				initial[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1].rot = initial[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1].rot
+				placeables[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1] = placeables[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1]
+			end
+		elseif string.sub(code,currentcharacter,currentcharacter) == ">" then						--duplicate the last 5 cells X times
+			local howmuch = 0
+			currentcharacter = currentcharacter + 1
+			if string.sub(code,currentcharacter,currentcharacter) == "(" then
+				howmuch = unbase84(string.sub(code,currentcharacter+1,currentcharacter+2))*5
+				currentcharacter = currentcharacter + 2
+			else
+				howmuch = unbase84(string.sub(code,currentcharacter,currentcharacter))*5
+			end
+			local startspot = currentspot
+			local curcell = 1
+			for i=1,howmuch do
+				if curcell == 1 then
+					curcell = 5
+				else
+					curcell = curcell - 1
+				end
+				currentspot = currentspot + 1
+				initial[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1].ctype = initial[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1].ctype
+				initial[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1].rot = initial[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1].rot
+				placeables[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1] = placeables[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1]
+			end
+		elseif string.sub(code,currentcharacter,currentcharacter) == "[" then						--duplicate the last 4 cells X times
+			local howmuch = 0
+			currentcharacter = currentcharacter + 1
+			if string.sub(code,currentcharacter,currentcharacter) == "(" then
+				howmuch = unbase84(string.sub(code,currentcharacter+1,currentcharacter+2))*4
+				currentcharacter = currentcharacter + 2
+			else
+				howmuch = unbase84(string.sub(code,currentcharacter,currentcharacter))*4
+			end
+			local startspot = currentspot
+			local curcell = 1
+			for i=1,howmuch do
+				if curcell == 1 then
+					curcell = 4
+				else
+					curcell = curcell - 1
+				end
+				currentspot = currentspot + 1
+				initial[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1].ctype = initial[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1].ctype
+				initial[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1].rot = initial[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1].rot
+				placeables[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1] = placeables[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1]
+			end
+		elseif string.sub(code,currentcharacter,currentcharacter) == "]" then						--duplicate the last 3 cells X times
+			local howmuch = 0
+			currentcharacter = currentcharacter + 1
+			if string.sub(code,currentcharacter,currentcharacter) == "(" then
+				howmuch = unbase84(string.sub(code,currentcharacter+1,currentcharacter+2))*3
+				currentcharacter = currentcharacter + 2
+			else
+				howmuch = unbase84(string.sub(code,currentcharacter,currentcharacter))*3
+			end
+			local startspot = currentspot
+			local curcell = 1
+			for i=1,howmuch do
+				if curcell == 1 then
+					curcell = 3
+				else
+					curcell = curcell - 1
+				end
+				currentspot = currentspot + 1
+				initial[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1].ctype = initial[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1].ctype
+				initial[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1].rot = initial[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1].rot
+				placeables[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1] = placeables[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1]
+			end
+		elseif string.sub(code,currentcharacter,currentcharacter) == ")" then						--duplicate the last 2 cells X times
+			local howmuch = 0
+			currentcharacter = currentcharacter + 1
+			if string.sub(code,currentcharacter,currentcharacter) == "(" then
+				howmuch = unbase84(string.sub(code,currentcharacter+1,currentcharacter+2))*2
+				currentcharacter = currentcharacter + 2
+			else
+				howmuch = unbase84(string.sub(code,currentcharacter,currentcharacter))*2
+			end
+			local startspot = currentspot
+			local curcell = 1
+			for i=1,howmuch do
+				if curcell == 1 then
+					curcell = 2
+				else
+					curcell = curcell - 1
+				end
+				currentspot = currentspot + 1
+				initial[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1].ctype = initial[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1].ctype
+				initial[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1].rot = initial[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1].rot
+				placeables[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1] = placeables[math.floor((startspot-curcell)/(width-2)+1)][(startspot-curcell)%(width-2)+1]
+			end
+		elseif string.sub(code,currentcharacter,currentcharacter) == ";" then
+			break
+		else																						--one cell
+			local celltype,cellrot,place
+			if string.sub(code,currentcharacter,currentcharacter) == "(" then
+				celltype,cellrot,place = NumToCell(unbase84(string.sub(code,currentcharacter+1,currentcharacter+2)),hasplaceables)
+				currentcharacter = currentcharacter + 2
+			else
+				celltype,cellrot,place = NumToCell(unbase84(string.sub(code,currentcharacter,currentcharacter)),hasplaceables)
+			end
+			currentspot = currentspot + 1
+			initial[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1].ctype = celltype
+			initial[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1].rot = cellrot
+			placeables[math.floor((currentspot-1)/(width-2)+1)][(currentspot-1)%(width-2)+1] = place
+		end  
+	end
+	bgsprites = love.graphics.newSpriteBatch(tex[0])
+	for y=0,height-1 do
+		for x=0,width-1 do
+			if y == 0 or x == 0 or y == height-1 or x == width-1 then
+				initial[y][x].ctype = -1
+			end
+			cells[y][x].ctype = initial[y][x].ctype
+			cells[y][x].rot = initial[y][x].rot
+			cells[y][x].lastvars = {x,y,cells[y][x].rot}
+			cells[y][x].testvar = ""
+			bgsprites:add((x-1)*20,(y-1)*20)
+		end
+	end
+	RefreshChunks()
+	paused = true
+	isinitial = true
+end
+
+local function EncodeK2()
 	local currentcell = 0
-	local result = "K1;"
+	local result = "K2;"
 	local hasplaceables = false
 	for x=0,width-1 do
 		for y=0,height-1 do
@@ -565,98 +770,118 @@ local function EncodeK1()
 	local currentloopmode = false
 	local reps = 0
 	while currentcell <= (width-2)*(height-2) do
-		if currentloopmode ~= "break" and CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-2)/(width-2)+1),(currentcell-2)%(width-2)+1,hasplaceables) and				--if the next 2 cells are the same as the last 5 cells, compress
+		if (currentloopmode == 2 or currentloopmode == false) and CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-2)/(width-2)+1),(currentcell-2)%(width-2)+1,hasplaceables) and				--if the next 2 cells are the same as the last 5 cells, compress
 		CellToNum(math.floor((currentcell+1)/(width-2)+1),(currentcell+1)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-1)/(width-2)+1),(currentcell-1)%(width-2)+1,hasplaceables) and
 		reps < 7055 then
-			if currentloopmode == 2 or currentloopmode == false then
-				if reps == 0 then
-					result = result..")"
-				end
-				reps = reps + 1
-				currentcell = currentcell + 2
-				currentloopmode = 2
-			else
-				currentloopmode = "break"
+			if reps == 0 then
+				result = result..")"
 			end
-		elseif currentloopmode ~= "break" and CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-3)/(width-2)+1),(currentcell-3)%(width-2)+1,hasplaceables) and				--or the next 3
+			reps = reps + 1
+			currentcell = currentcell + 2
+			currentloopmode = 2
+		elseif (currentloopmode == 3 or currentloopmode == false) and CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-3)/(width-2)+1),(currentcell-3)%(width-2)+1,hasplaceables) and				--or the next 3
 		CellToNum(math.floor((currentcell+1)/(width-2)+1),(currentcell+1)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-2)/(width-2)+1),(currentcell-2)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+2)/(width-2)+1),(currentcell+2)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-1)/(width-2)+1),(currentcell-1)%(width-2)+1,hasplaceables) and
 		reps < 7055 then
-			if currentloopmode == 3 or currentloopmode == false then
-				if reps == 0 then
-					result = result.."]"
-				end
-				reps = reps + 1
-				currentcell = currentcell + 3
-				currentloopmode = 3
-			else
-				currentloopmode = "break"
+			if reps == 0 then
+				result = result.."]"
 			end
-		elseif currentloopmode ~= "break" and CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-4)/(width-2)+1),(currentcell-4)%(width-2)+1,hasplaceables) and				--or the next 4
+			reps = reps + 1
+			currentcell = currentcell + 3
+			currentloopmode = 3
+		elseif (currentloopmode == 4 or currentloopmode == false) and CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-4)/(width-2)+1),(currentcell-4)%(width-2)+1,hasplaceables) and				--or the next 4
 		CellToNum(math.floor((currentcell+1)/(width-2)+1),(currentcell+1)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-3)/(width-2)+1),(currentcell-3)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+2)/(width-2)+1),(currentcell+2)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-2)/(width-2)+1),(currentcell-2)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+3)/(width-2)+1),(currentcell+3)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-1)/(width-2)+1),(currentcell-1)%(width-2)+1,hasplaceables) and
 		reps < 7055 then
-			if currentloopmode == 4 or currentloopmode == false then
-				if reps == 0 then
-					result = result.."["
-				end
-				reps = reps + 1
-				currentcell = currentcell + 4
-				currentloopmode = 4
-			else
-				currentloopmode = "break"
+			if reps == 0 then
+				result = result.."["
 			end
-		elseif currentloopmode ~= "break" and CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-5)/(width-2)+1),(currentcell-5)%(width-2)+1,hasplaceables) and				--or the next 5
+			reps = reps + 1
+			currentcell = currentcell + 4
+			currentloopmode = 4
+		elseif (currentloopmode == 5 or currentloopmode == false) and CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-5)/(width-2)+1),(currentcell-5)%(width-2)+1,hasplaceables) and				--or the next 5
 		CellToNum(math.floor((currentcell+1)/(width-2)+1),(currentcell+1)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-4)/(width-2)+1),(currentcell-4)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+2)/(width-2)+1),(currentcell+2)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-3)/(width-2)+1),(currentcell-3)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+3)/(width-2)+1),(currentcell+3)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-2)/(width-2)+1),(currentcell-2)%(width-2)+1,hasplaceables) and
 		CellToNum(math.floor((currentcell+4)/(width-2)+1),(currentcell+4)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-1)/(width-2)+1),(currentcell-1)%(width-2)+1,hasplaceables) and
 		reps < 7055 then
-			if currentloopmode == 5 or currentloopmode == false then
-				if reps == 0 then
-					result = result..">"
+			if reps == 0 then
+				result = result..">"
+			end
+			reps = reps + 1
+			currentcell = currentcell + 5
+			currentloopmode = 5
+		elseif currentloopmode ~= "break" and (currentloopmode or 0) > 5 and reps < 7055 then
+			local itworked = true
+			for j=0,(currentloopmode-1) do
+				if CellToNum(math.floor((currentcell+j)/(width-2)+1),(currentcell+j)%(width-2)+1,hasplaceables) ~= CellToNum(math.floor((currentcell-(currentloopmode-j))/(width-2)+1),(currentcell-(currentloopmode-j))%(width-2)+1,hasplaceables) then
+					itworked = false
+					break
 				end
+			end
+			if itworked then
 				reps = reps + 1
-				currentcell = currentcell + 5
-				currentloopmode = 5
+				currentcell = currentcell + currentloopmode
 			else
 				currentloopmode = "break"
 			end
-		elseif currentloopmode ~= "break" and CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-6)/(width-2)+1),(currentcell-6)%(width-2)+1,hasplaceables) and				--or the next 6
-		CellToNum(math.floor((currentcell+1)/(width-2)+1),(currentcell+1)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-5)/(width-2)+1),(currentcell-5)%(width-2)+1,hasplaceables) and
-		CellToNum(math.floor((currentcell+2)/(width-2)+1),(currentcell+2)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-4)/(width-2)+1),(currentcell-4)%(width-2)+1,hasplaceables) and
-		CellToNum(math.floor((currentcell+3)/(width-2)+1),(currentcell+3)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-3)/(width-2)+1),(currentcell-3)%(width-2)+1,hasplaceables) and
-		CellToNum(math.floor((currentcell+4)/(width-2)+1),(currentcell+4)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-2)/(width-2)+1),(currentcell-2)%(width-2)+1,hasplaceables) and
-		CellToNum(math.floor((currentcell+5)/(width-2)+1),(currentcell+5)%(width-2)+1,hasplaceables) == CellToNum(math.floor((currentcell-1)/(width-2)+1),(currentcell-1)%(width-2)+1,hasplaceables) and
-		reps < 7055 then
-			if currentloopmode == 6 or currentloopmode == false then
-				if reps == 0 then
-					result = result.."<"
+		elseif currentloopmode == false then
+			if math.min(currentcell,math.abs((width-2)*(height-2)-currentcell)) > 5 then
+				local reping = false
+				for i=6,math.min(math.min(currentcell,math.abs((width-2)*(height-2)-currentcell)),math.max((width-2)*2,(height-2)*2)) do
+					local itworked = true
+					for j=0,(i-1) do
+						cells[math.floor((currentcell+j)/(width-2)+1)][(currentcell+j)%(width-2)+1].testvar = "a"
+						cells[math.floor((currentcell-(i-j))/(width-2)+1)][(currentcell-(i-j))%(width-2)+1].testvar = "b"
+						if CellToNum(math.floor((currentcell+j)/(width-2)+1),(currentcell+j)%(width-2)+1,hasplaceables) ~= CellToNum(math.floor((currentcell-(i-j))/(width-2)+1),(currentcell-(i-j))%(width-2)+1,hasplaceables) then
+							itworked = false
+							break
+						end
+					end
+					if itworked then
+						result = result.."<"
+						if i >= 84 then
+							result = result.."("
+							result = result..base84(i)
+						else
+							result = result..base84(i)
+						end  
+						reps = reps + 1
+						currentcell = currentcell + i
+						currentloopmode = i
+						reping = true
+						break
+					end
 				end
-				reps = reps + 1
-				currentcell = currentcell + 6
-				currentloopmode = 6
+				if not reping then
+					if CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) >= 84 then
+						result = result.."("
+						result = result..base84(CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables))
+					else
+						result = result..base84(CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables))
+					end
+					currentcell = currentcell + 1
+				end
 			else
-				currentloopmode = "break"
+				if CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) >= 84 then
+					result = result.."("
+					result = result..base84(CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables))
+				else
+					result = result..base84(CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables))
+				end
+				currentcell = currentcell + 1
 			end
-		elseif reps ~= 0 or currentloopmode == "break" then
+		else
 			if reps >= 84 then
 				result = result.."("
 			end
 			result = result..base84(reps)
 			currentloopmode = false
 			reps = 0
-		else
-			if CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables) >= 84 then
-				result = result.."("
-				result = result..base84(CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables))
-			else
-				result = result..base84(CellToNum(math.floor(currentcell/(width-2)+1),currentcell%(width-2)+1,hasplaceables))
-			end
-			currentcell = currentcell + 1
 		end
 	end
+	result = result..";"
 	love.system.setClipboardText(result)
 end
 
@@ -1287,7 +1512,7 @@ local function DoGenerator(x,y,dir,gendir)
 	addedrot = addedrot + (gendir-dir)
 	cells[cy][cx].testvar = "gen'd"
 	if cells[cy][cx].ctype ~= 0 then
-		PushCell(x,y,gendir,false,1,cells[cy][cx].ctype,cells[cy][cx].rot+addedrot,cells[cy][cx].ctype == 2 or cells[cy][cx].ctype == 19 or cells[cy][cx].ctype == 22 or cells[cy][cx].ctype == 25 or cells[cy][cx].ctype == 26,{cells[y][x].lastvars[1],cells[y][x].lastvars[2],(cells[cy][cx].rot+addedrot)%4})
+		PushCell(x,y,gendir,false,1,cells[cy][cx].ctype,cells[cy][cx].rot+addedrot,cells[cy][cx].ctype == 19,{cells[y][x].lastvars[1],cells[y][x].lastvars[2],(cells[cy][cx].rot+addedrot)%4})
 	end
 end
 
@@ -1825,6 +2050,8 @@ end
 
 local function DoMover(x,y,dir)
 	cells[y][x].updated = true
+	local cx
+	local cy
 	if dir == 0 then cx = x - 1 elseif dir == 2 then cx = x + 1 else cx = x end
 	if dir == 1 then cy = y - 1 elseif dir == 3 then cy = y + 1 else cy = y end
 	PushCell(cx,cy,dir,true,0)	--it'll come across itself as it moves and get 1 totalforce
@@ -2085,7 +2312,7 @@ function love.draw()
 	for y=math.max(math.floor(offy/zoom)-1,0),math.min(math.floor((offy+600*winym)/zoom)+1,height-1) do
 		for x=math.max(math.floor(offx/zoom)-1,0),math.min(math.floor((offx+800*winxm)/zoom)+1,width-1) do
 			if cells[y][x].ctype ~= 0 then 
-				love.graphics.draw(tex[cells[y][x].ctype],math.floor(lerp(cells[y][x].lastvars[1],x,itime/delay)*zoom-offx+zoom/2),math.floor(lerp(cells[y][x].lastvars[2],y,itime/delay)*zoom-offy+zoom/2),lerp(cells[y][x].lastvars[3],cells[y][x].lastvars[3]+((cells[y][x].rot-cells[y][x].lastvars[3]+2)%4-2),itime/delay)*math.pi/2,zoom/20,zoom/20,10,10)
+				love.graphics.draw((tex[cells[y][x].ctype] or tex.nonexistant),math.floor(lerp(cells[y][x].lastvars[1],x,itime/delay)*zoom-offx+zoom/2),math.floor(lerp(cells[y][x].lastvars[2],y,itime/delay)*zoom-offy+zoom/2),lerp(cells[y][x].lastvars[3],cells[y][x].lastvars[3]+((cells[y][x].rot-cells[y][x].lastvars[3]+2)%4-2),itime/delay)*math.pi/2,zoom/20,zoom/20,10,10)
 			end
 			if dodebug then
 				love.graphics.print(tostring(cells[y][x].testvar),x*zoom-offx+zoom/2,y*zoom-offy+zoom/2)
@@ -2109,7 +2336,7 @@ function love.draw()
 		for y=0,#copied do
 			for x=0,#copied[0] do
 				if copied[y][x].place then love.graphics.draw(tex[-2],math.floor((math.floor((love.mouse.getX()+offx)/zoom)+x)*zoom-offx+zoom/2),math.floor((math.floor((love.mouse.getY()+offy)/zoom)+y)*zoom-offy+zoom/2),0,zoom/20,zoom/20,10,10) end
-				love.graphics.draw(tex[copied[y][x].ctype],(math.floor((love.mouse.getX()+offx)/zoom)+x)*zoom-offx+zoom/2,(math.floor((love.mouse.getY()+offy)/zoom)+y)*zoom-offy+zoom/2,copied[y][x].rot*math.pi/2,zoom/20,zoom/20,10,10)
+				love.graphics.draw((tex[copied[y][x].ctype] or tex.nonexistant),(math.floor((love.mouse.getX()+offx)/zoom)+x)*zoom-offx+zoom/2,(math.floor((love.mouse.getY()+offy)/zoom)+y)*zoom-offy+zoom/2,copied[y][x].rot*math.pi/2,zoom/20,zoom/20,10,10)
 			end
 		end
 		love.graphics.rectangle("line",math.floor((math.floor((love.mouse.getX()+offx)/zoom))*zoom-offx),math.floor((math.floor((love.mouse.getY()+offy)/zoom))*zoom-offy),(#copied[0]+1)*zoom,(#copied+1)*zoom)
@@ -2136,8 +2363,6 @@ function love.draw()
 	end
 	if paused then
 		love.graphics.setColor(0.5,0.5,0.5,0.75)
-		love.graphics.rectangle("fill",5*winxm,5*winym,10*winxm,40*winxm)
-		love.graphics.rectangle("fill",23*winxm,5*winym,10*winxm,40*winxm)
 		love.graphics.setColor(1,1,1,0.5)
 		love.graphics.draw(tex[1],725*winxm,25*winym,0,3*winxm,3*winxm)
 	else
@@ -2180,7 +2405,7 @@ function love.draw()
 		love.graphics.rectangle("fill",100*winxm,75*winym,600*winxm,450*winym)
 		love.graphics.setColor(1,1,1,1)
 		love.graphics.print("this is the menu",300*winxm,120*winym,0,2*winxm,2*winym)
-		love.graphics.print("CelLua Machine v0.1.0",330*winxm,90*winym,0,winxm,winym)
+		love.graphics.print("CelLua Machine v1.1.0",330*winxm,90*winym,0,winxm,winym)
 		love.graphics.print("by KyYay",365*winxm,105*winym,0,winxm,winym)
 		love.graphics.print("Update delay: "..string.sub(delay,1,4).."s",150*winxm,160*winym,0,winxm,winym)
 		love.graphics.print("Ticks per update: "..tpu,150*winxm,200*winym,0,winxm,winym)
@@ -2286,7 +2511,7 @@ function love.mousepressed(x,y,b)
 			love.audio.play(beep)
 			RefreshChunks()
 		elseif x > 470 and x < 530 then
-			EncodeK1()
+			EncodeK2()
 			love.audio.play(beep)
 		elseif x > 570 and x < 630 then
 			if string.sub(love.system.getClipboardText(),1,2) == "V3" then
@@ -2298,6 +2523,13 @@ function love.mousepressed(x,y,b)
 				love.audio.play(beep)
 			elseif string.sub(love.system.getClipboardText(),1,2) == "K1" then
 				DecodeK1(love.system.getClipboardText())
+				inmenu = false
+				placecells = false
+				newwidth = width-2
+				newheight = height-2
+				love.audio.play(beep)
+			elseif string.sub(love.system.getClipboardText(),1,2) == "K2" then
+				DecodeK2(love.system.getClipboardText())
 				inmenu = false
 				placecells = false
 				newwidth = width-2
@@ -2334,7 +2566,7 @@ function love.mousepressed(x,y,b)
 			end
 			placecells = false
 		elseif x >= 25+150 and x <= 25+150+60 and y >= 25 and y <= 25+60*(winxm/winym) then
-			if zoom > 4 then
+			if zoom > 2 then
 				offx = (offx-400*winxm)*0.5
 				offy = (offy-300*winym)*0.5
 				zoom = zoom*0.5
@@ -2373,7 +2605,10 @@ function love.mousepressed(x,y,b)
 						copied[y][x].place = placeables[y+sely][x+selx]
 						cells[y+sely][x+selx].ctype = 0
 						cells[y+sely][x+selx].rot = 0
-						placeables[y+sely][x+selx] = false
+						if isinitial then
+							initial[y+sely][x+selx].ctype = 0
+							placeables[y+sely][x+selx] = false
+						end
 					end
 				end
 				selecting = false
@@ -2481,7 +2716,7 @@ function love.mousepressed(x,y,b)
 			paused = not paused
 			isinitial = false
 			placecells = false
-		elseif x >= 725 and x <= 725+60 and y >= 25+75*(winxm/winym) and y <= 25+75*(winxm/winym)+60*(winxm/winym) then
+		elseif x >= 725 and x <= 725+60 and y >= 25+75*(winxm/winym) and y <= 25+75*(winxm/winym)+60*(winxm/winym) and not isinitial then
 			for y=0,newheight+1 do
 				initial[y] = initial[y] or {}
 				cells[y] = {}
@@ -2514,7 +2749,7 @@ function love.mousepressed(x,y,b)
 			paused = true
 			isinitial = true
 			RefreshChunks()
-		elseif x >= 725-150 and x <= 725-15 and y >= 25+75*(winxm/winym) and y <= 25+75*(winxm/winym)+60*(winxm/winym) then
+		elseif x >= 725-150 and x <= 725-15 and y >= 25+75*(winxm/winym) and y <= 25+75*(winxm/winym)+60*(winxm/winym) and not isinitial then
 			for y=0,height-1 do
 				for x=0,width-1 do
 					initial[y][x].ctype = cells[y][x].ctype 
@@ -2589,7 +2824,7 @@ function love.mousepressed(x,y,b)
 			placecells = false
 		elseif selecting then
 			selx = math.max(math.min(math.floor((love.mouse.getX()+offx)/zoom),width-2),1)
-			sely = math.max(math.min(math.floor((love.mouse.getY()+offy)/zoom),width-2),1)
+			sely = math.max(math.min(math.floor((love.mouse.getY()+offy)/zoom),height-2),1)
 		elseif pasting and b == 1 then
 			pasting = false
 			if math.floor((love.mouse.getX()+offx)/zoom) > 0 and math.floor((love.mouse.getX()+offx)/zoom) < width-#copied[0] and math.floor((love.mouse.getY()+offy)/zoom) > 0 and math.floor((love.mouse.getY()+offy)/zoom) < height-#copied then 
@@ -2622,7 +2857,7 @@ function love.mousepressed(x,y,b)
 		elseif pasting and b == 2 then
 			pasting = false
 			placecells = false
-		else
+		elseif (b == 1 or b == 2) and math.floor((love.mouse.getY()+offy)/zoom) > 0 and math.floor((love.mouse.getX()+offx)/zoom) > 0 and math.floor((love.mouse.getY()+offy)/zoom) < height-1 and math.floor((love.mouse.getX()+offx)/zoom) < width-1 then
 			undocells = nil
 		end
 	end
@@ -2697,7 +2932,7 @@ function love.keypressed(key)
 			offy = offy*2 + 300*winym
 		end
 	elseif key == "down" then
-		if zoom > 4 then
+		if zoom > 2 then
 			offx = (offx-400*winxm)*0.5
 			offy = (offy-300*winym)*0.5
 			zoom = zoom*0.5
@@ -2782,6 +3017,10 @@ function love.keypressed(key)
 					copied[y][x].place = placeables[y+sely][x+selx]
 					cells[y+sely][x+selx].ctype = 0
 					cells[y+sely][x+selx].rot = 0
+					if isinitial then
+						initial[y+sely][x+selx].ctype = 0
+						placeables[y+sely][x+selx] = false
+					end
 				end
 			end
 			selecting = false
