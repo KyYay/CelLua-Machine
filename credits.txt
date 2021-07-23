@@ -2,8 +2,6 @@ The people who created the ideas for the cells currenly in game (and that weren'
 
 180 Rotator, Puller, Generator variants, Slide cell variants - Too general of an idea to give credit to any specific person
 
-Freezer Cell - Came up on my own
-
 Gear Cell - Inspired by Sam Hogan's original idea for the Rotator Cell ("grabs and spins cells around it")
 
 Mold Cell - i fell onto water and died#7501 (although i couldn't make it pass-through sorry)
@@ -19,3 +17,5 @@ Redirector Cell - HeavenlyMessiah#4604
 Mirror Cell - Fowo Vinvalut#8835
 
 Weight Cell (renamed from "condition cell") - Spunky_Dollish_2#6870
+
+Advancer Cell (renamed from "Pullsher Cell") - Rou_bi#8240, was gonna be in Blendi Goose#0414's b-mod but it was too difficult for him
