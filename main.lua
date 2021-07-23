@@ -2405,7 +2405,7 @@ function love.draw()
 		love.graphics.rectangle("fill",100*winxm,75*winym,600*winxm,450*winym)
 		love.graphics.setColor(1,1,1,1)
 		love.graphics.print("this is the menu",300*winxm,120*winym,0,2*winxm,2*winym)
-		love.graphics.print("CelLua Machine v1.1.0",330*winxm,90*winym,0,winxm,winym)
+		love.graphics.print("CelLua Machine v1.1.1",330*winxm,90*winym,0,winxm,winym)
 		love.graphics.print("by KyYay",365*winxm,105*winym,0,winxm,winym)
 		love.graphics.print("Update delay: "..string.sub(delay,1,4).."s",150*winxm,160*winym,0,winxm,winym)
 		love.graphics.print("Ticks per update: "..tpu,150*winxm,200*winym,0,winxm,winym)
@@ -2827,7 +2827,7 @@ function love.mousepressed(x,y,b)
 			sely = math.max(math.min(math.floor((love.mouse.getY()+offy)/zoom),height-2),1)
 		elseif pasting and b == 1 then
 			pasting = false
-			if math.floor((love.mouse.getX()+offx)/zoom) > 0 and math.floor((love.mouse.getX()+offx)/zoom) < width-#copied[0] and math.floor((love.mouse.getY()+offy)/zoom) > 0 and math.floor((love.mouse.getY()+offy)/zoom) < height-#copied then 
+			if math.floor((love.mouse.getX()+offx)/zoom) > 0 and math.floor((love.mouse.getX()+offx)/zoom) < width-#copied[0]-1 and math.floor((love.mouse.getY()+offy)/zoom) > 0 and math.floor((love.mouse.getY()+offy)/zoom) < height-#copied-1 then 
 				undocells = {}
 				for y=0,height-1 do
 					undocells[y] = {}
