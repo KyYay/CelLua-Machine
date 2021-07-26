@@ -72,7 +72,13 @@ Twist Generator Cell - Acts like a flipper and a generator combined.<br>
 ![image](https://user-images.githubusercontent.com/71151507/127073322-801b8fe9-34c9-4232-b8f0-7d5aaebf1436.png)
 
 Gate Cell - Act like conditional (and semi-immobile) generator cells. They take in cells on their left and right, sort of acting like a trash cell, and clone the cell behind them if the condition is satisfied. <br>
-From left to right: 
+From left to right: OR, AND, XOR, NOR, NAND, XNOR
+![image](https://user-images.githubusercontent.com/71151507/127064896-f5d1c6d5-3062-439b-88d4-2ddf1f705a9f.png)
+![image](https://user-images.githubusercontent.com/71151507/127064903-5fd4e6ec-3354-4fff-b69d-bfffb33a5e89.png)
+![image](https://user-images.githubusercontent.com/71151507/127064924-07acf6ee-6a06-4d40-bd8c-98ec8695b5a3.png)
+![image](https://user-images.githubusercontent.com/71151507/127064933-1cbd9f5a-a70c-48ae-af46-7b6a9dcd773c.png)
+![image](https://user-images.githubusercontent.com/71151507/127064945-b49cc596-046d-46b9-b18e-b62112483798.png)
+![image](https://user-images.githubusercontent.com/71151507/127064950-c689dded-9b02-44fe-8806-769a9c8b4bfd.png)
 
 Current priority system (updating from left to right) <br>
 ![image](https://user-images.githubusercontent.com/71151507/127073266-165dfc09-01c7-469d-8e1a-d3a55e01f598.png) <br>
