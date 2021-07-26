@@ -68,7 +68,19 @@ Advancer Cell - Acts like a mover and puller combined. They are also, in a way, 
 Flipper Cell - Will effectively "flip" the 4 neighboring cells horizontally or vertically, depending on it's own rotation. "Flipping" includes turning clockwise cells into counter-clockwise cells, and vice versa.<br>
 ![image](https://user-images.githubusercontent.com/71151507/126307519-0dea882f-cb75-4082-8b86-8ac5a3cef3ea.png)
 
+Twist Generator Cell - Will effectively "flip" the 4 neighboring cells horizontally or vertically, depending on it's own rotation. "Flipping" includes turning clockwise cells into counter-clockwise cells, and vice versa.<br>
+![image](https://user-images.githubusercontent.com/71151507/127064669-6c56312b-1e34-409c-a34c-cc7034c0aa6a.png)
+
+Gate Cell - Act like conditional (and semi-immovable) generators, their left and right sides being the inputs and acting sorta like trash cells and duplicating the cell behind them if their condition is fulfilled. The symbol for each type of gate is imprinted on the front.<br>
+![image](https://user-images.githubusercontent.com/71151507/127064896-f5d1c6d5-3062-439b-88d4-2ddf1f705a9f.png)
+![image](https://user-images.githubusercontent.com/71151507/127064903-5fd4e6ec-3354-4fff-b69d-bfffb33a5e89.png)
+![image](https://user-images.githubusercontent.com/71151507/127064924-07acf6ee-6a06-4d40-bd8c-98ec8695b5a3.png)
+![image](https://user-images.githubusercontent.com/71151507/127064933-1cbd9f5a-a70c-48ae-af46-7b6a9dcd773c.png)
+![image](https://user-images.githubusercontent.com/71151507/127064945-b49cc596-046d-46b9-b18e-b62112483798.png)
+![image](https://user-images.githubusercontent.com/71151507/127064950-c689dded-9b02-44fe-8806-769a9c8b4bfd.png)
 
 Current priority system (updating from left to right) <br>
-![image](https://user-images.githubusercontent.com/71151507/126307831-126d272a-a181-4b7b-9125-d829afb7a11f.png) <br>
-(Cross generators are like normal generators but are activated in two different subticks, and angled generators are both updated after normal/cross generators)
+![image](https://user-images.githubusercontent.com/71151507/127064441-cf608f21-fb30-4e51-acf2-a9580fce604f.png) <br>
+(Cross generators are like normal generators but are activated in two different subticks, and angled generators are both updated after normal/cross generators) <br>
+(Twist generators update at the same time as normal generators) <br>
+(All types of gate cells update at the same time)
