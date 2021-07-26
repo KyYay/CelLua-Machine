@@ -68,7 +68,7 @@ Advancer Cell - Acts like a mover and puller combined. They are also, in a way, 
 Flipper Cell - Will effectively "flip" the 4 neighboring cells horizontally or vertically, depending on it's own rotation. "Flipping" includes turning clockwise cells into counter-clockwise cells, and vice versa.<br>
 ![image](https://user-images.githubusercontent.com/71151507/126307519-0dea882f-cb75-4082-8b86-8ac5a3cef3ea.png)
 
-Twist Generator Cell - Will effectively "flip" the 4 neighboring cells horizontally or vertically, depending on it's own rotation. "Flipping" includes turning clockwise cells into counter-clockwise cells, and vice versa.<br>
+Twist Generator Cell - Acts like a generator and a flipper combined.<br>
 ![image](https://user-images.githubusercontent.com/71151507/127064669-6c56312b-1e34-409c-a34c-cc7034c0aa6a.png)
 
 Gate Cell - Act like conditional (and semi-immovable) generators, their left and right sides being the inputs and acting sorta like trash cells and duplicating the cell behind them if their condition is fulfilled. The symbol for each type of gate is imprinted on the front.<br>
