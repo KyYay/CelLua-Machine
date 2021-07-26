@@ -68,7 +68,14 @@ Advancer Cell - Acts like a mover and puller combined. They are also, in a way, 
 Flipper Cell - Will effectively "flip" the 4 neighboring cells horizontally or vertically, depending on it's own rotation. "Flipping" includes turning clockwise cells into counter-clockwise cells, and vice versa.<br>
 ![image](https://user-images.githubusercontent.com/71151507/126307519-0dea882f-cb75-4082-8b86-8ac5a3cef3ea.png)
 
+Twist Generator Cell - Acts like a flipper and a generator combined.<br>
+![image](https://user-images.githubusercontent.com/71151507/127073322-801b8fe9-34c9-4232-b8f0-7d5aaebf1436.png)
+
+Gate Cell - Act like conditional (and semi-immobile) generator cells. They take in cells on their left and right, sort of acting like a trash cell, and clone the cell behind them if the condition is satisfied. <br>
+From left to right: 
 
 Current priority system (updating from left to right) <br>
-![image](https://user-images.githubusercontent.com/71151507/126307831-126d272a-a181-4b7b-9125-d829afb7a11f.png) <br>
-(Cross generators are like normal generators but are activated in two different subticks, and angled generators are both updated after normal/cross generators)
+![image](https://user-images.githubusercontent.com/71151507/127073266-165dfc09-01c7-469d-8e1a-d3a55e01f598.png) <br>
+(Cross generators are like normal generators but are activated in two different subticks, and angled generators are both updated after normal/cross generators)<br>
+(Twist generators update at the same time as normal generators)<br>
+(All types of gate cells update at the same time)
