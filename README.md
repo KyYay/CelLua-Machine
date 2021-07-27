@@ -80,6 +80,9 @@ From left to right: OR, AND, XOR, NOR, NAND, XNOR <br>
 ![image](https://user-images.githubusercontent.com/71151507/127064945-b49cc596-046d-46b9-b18e-b62112483798.png)
 ![image](https://user-images.githubusercontent.com/71151507/127064950-c689dded-9b02-44fe-8806-769a9c8b4bfd.png)
 
+Ghost Cell - Acts like a wall cell that cannot be generated, similar to the level border in the Mystic Mod.<br>
+![image](https://user-images.githubusercontent.com/71151507/127099228-cd03e282-1d3a-41bf-9b4c-26490defd86f.png)
+
 Current priority system (updating from left to right) <br>
 ![image](https://user-images.githubusercontent.com/71151507/127073266-165dfc09-01c7-469d-8e1a-d3a55e01f598.png) <br>
 (Cross generators are like normal generators but are activated in two different subticks, and angled generators are both updated after normal/cross generators)<br>
