@@ -210,8 +210,8 @@ local function CellToNum(y,x,hasplaceables)
 	if x >= 1 and y >= 1 and x < width-1 and y < height-1 then
 		if hasplaceables then
 			if initial[y][x].ctype == 0 or initial[y][x].ctype == -1 or cells[y][x].ctype == 40 or initial[y][x].ctype == 3 or initial[y][x].ctype == 11 or initial[y][x].ctype == 12 or initial[y][x].ctype == 23
-			or initial[y][x].ctype == 20 or initial[y][x].ctype == 28 or initial[y][x].ctype == 21 or initial[y][x].ctype == 24 or initial[y][x].ctype == 8 or initial[y][x].ctype == 9
-			or initial[y][x].ctype == 10 or initial[y][x].ctype == 19 or initial[y][x].ctype == 17 or initial[y][x].ctype == 18 or initial[y][x].ctype == 38 or initial[y][x].ctype == 42 then	--cells who dont care about rotations
+			or initial[y][x].ctype == 20 or initial[y][x].ctype == 28 or initial[y][x].ctype == 21 or initial[y][x].ctype == 24 or initial[y][x].ctype == 8 or initial[y][x].ctype == 9 or initial[y][x].ctype == 10
+			or initial[y][x].ctype == 19 or initial[y][x].ctype == 17 or initial[y][x].ctype == 18 or initial[y][x].ctype == 38 or initial[y][x].ctype == 42 or initial[y][x].ctype == 46 then	--cells who dont care about rotations
 				return (initial[y][x].ctype+1)*8 + ((placeables[y][x] and 1) or 0)
 			elseif initial[y][x].ctype == 4 or initial[y][x].ctype == 14 or initial[y][x].ctype == 29 or initial[y][x].ctype == 30 or initial[y][x].ctype == 37 then	--cells who effectively only have 2 rotations
 				return (initial[y][x].ctype+1)*8 + (initial[y][x].rot)%2*2 + ((placeables[y][x] and 1) or 0)
@@ -220,8 +220,8 @@ local function CellToNum(y,x,hasplaceables)
 			end
 		else
 			if initial[y][x].ctype == 0 or initial[y][x].ctype == -1 or cells[y][x].ctype == 40 or initial[y][x].ctype == 3 or initial[y][x].ctype == 11 or initial[y][x].ctype == 12 or initial[y][x].ctype == 23
-			or initial[y][x].ctype == 20 or initial[y][x].ctype == 28 or initial[y][x].ctype == 21 or initial[y][x].ctype == 24 or initial[y][x].ctype == 8 or initial[y][x].ctype == 9
-			or initial[y][x].ctype == 10 or initial[y][x].ctype == 19 or initial[y][x].ctype == 17 or initial[y][x].ctype == 18 or initial[y][x].ctype == 38 or initial[y][x].ctype == 42 then	--cells who dont care about rotations
+			or initial[y][x].ctype == 20 or initial[y][x].ctype == 28 or initial[y][x].ctype == 21 or initial[y][x].ctype == 24 or initial[y][x].ctype == 8 or initial[y][x].ctype == 9 or initial[y][x].ctype == 10
+			or initial[y][x].ctype == 19 or initial[y][x].ctype == 17 or initial[y][x].ctype == 18 or initial[y][x].ctype == 38 or initial[y][x].ctype == 42 or initial[y][x].ctype == 46 then	--cells who dont care about rotations
 				return (initial[y][x].ctype+1)*4 + ((placeables[y][x] and 1) or 0)
 			elseif initial[y][x].ctype == 4 or initial[y][x].ctype == 14 or initial[y][x].ctype == 29 or initial[y][x].ctype == 30 or initial[y][x].ctype == 37 then	--cells who effectively only have 2 rotations
 				return (initial[y][x].ctype+1)*4 + initial[y][x].rot%2
@@ -1489,6 +1489,8 @@ local function UpdateMirrors()
 						local oldcell = CopyCell(x-1,y)
 						cells[y][x-1] = CopyCell(x+1,y)
 						cells[y][x+1] = oldcell
+						SetChunk(x-1,y,cells[y][x-1].ctype)
+						SetChunk(x+1,y,cells[y][x+1].ctype)
 					end
 				end
 				x = x + 1
@@ -1509,6 +1511,8 @@ local function UpdateMirrors()
 						local oldcell = CopyCell(x,y-1)
 						cells[y-1][x] = CopyCell(x,y+1)
 						cells[y+1][x] = oldcell
+						SetChunk(x,y-1,cells[y-1][x].ctype)
+						SetChunk(x,y+1,cells[y+1][x].ctype)
 					end
 				end
 				y = y + 1
@@ -2615,7 +2619,7 @@ local function DoTick()
 		if ticknum == 25 then
 			RefreshChunks()
 		end
-		subtick = (subtick + 1)%16
+		subtick = (subtick + 1)%17
 	else
 		for y=0,height-1 do
 			for x=0,width-1 do
@@ -2684,6 +2688,15 @@ function love.load()
 	end
 	winxm = (love.graphics.getWidth()/800)
 	winym = (love.graphics.getHeight()/600)
+	--[[local s = "K2;1g;1g;0;"
+	for i=0,100*100 do
+		local n = math.random(0,49*4)
+		if i >= 84 then
+			s = s.."("
+		end
+		s = s..base84(i)
+	end
+	DecodeK2(s)]]
 end
 
 function love.update(dt)
@@ -2700,7 +2713,7 @@ function love.update(dt)
 				elseif y >= 195 and y <= 205 then
 					tpu = round((x-150)/(500/9))+1
 				elseif y >= 230 and y <= 240 then
-					volume = (x-150)/500
+					volume = round((x-150)/5)/100
 					love.audio.setVolume(volume)
 				elseif y >= 265 and y <= 275 then
 					border = round((x-150)/(500/2))+1
@@ -2817,6 +2830,10 @@ function love.update(dt)
 				end
 			end
 		end
+	end
+	if not typing then
+		newwidth = math.max(newwidth,1)
+		newheight = math.max(newheight,1)
 	end
 	itime = math.min(itime + dt,delay)
 	enemyparticles:update(dt)
