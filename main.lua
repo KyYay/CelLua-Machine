@@ -2688,15 +2688,6 @@ function love.load()
 	end
 	winxm = (love.graphics.getWidth()/800)
 	winym = (love.graphics.getHeight()/600)
-	--[[local s = "K2;1g;1g;0;"
-	for i=0,100*100 do
-		local n = math.random(0,49*4)
-		if i >= 84 then
-			s = s.."("
-		end
-		s = s..base84(i)
-	end
-	DecodeK2(s)]]
 end
 
 function love.update(dt)
@@ -2949,7 +2940,7 @@ function love.draw()
 		love.graphics.rectangle("fill",100*winxm,75*winym,600*winxm,450*winym)
 		love.graphics.setColor(1,1,1,1)
 		love.graphics.print("this is the menu",300*winxm,120*winym,0,2*winxm,2*winym)
-		love.graphics.print("CelLua Machine v1.3.0",330*winxm,90*winym,0,winxm,winym)
+		love.graphics.print("CelLua Machine v1.3.1",330*winxm,90*winym,0,winxm,winym)
 		love.graphics.print("by KyYay",365*winxm,105*winym,0,winxm,winym)
 		love.graphics.print("Update delay: "..string.sub(delay,1,4).."s",150*winxm,145*winym,0,winxm,winym)
 		love.graphics.print("Ticks per update: "..tpu,150*winxm,180*winym,0,winxm,winym)
