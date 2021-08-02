@@ -101,7 +101,7 @@ Fungal Cell - Transforms any cells that get pushed into it into more fungus cell
 ![image](https://user-images.githubusercontent.com/71151507/127791074-24b3e584-629d-4628-99ce-c25388a94aa1.png)
 
 Forker Cell - Acts sort of like a diverger, but it's one-way and duplicates cells that come into it. Currently does not work with pulling, only pushing.<br>
-NOTE: Thse cells are very unstable if used in a nuke, and are very very likely to crash your game. If you use them in a nuke, do not blame me for what happens.
+NOTE: Thse cells are very unstable if used in a nuke, and are very very likely to crash your game. If you use them in a nuke, do not blame me for what happens.<br>
 ![image](https://user-images.githubusercontent.com/71151507/127791086-ab71252d-802e-4c46-ac83-e64b48a1db83.png)
 ![image](https://user-images.githubusercontent.com/71151507/127791139-7a469fe1-12be-4349-81af-af8053a8bcb8.png)
 
