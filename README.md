@@ -1,10 +1,11 @@
-# CelLua-Machine
-A fanmade version of Sam Hogan's Cell Machine, based heavily off the Mystic Mod, that adds a bunch of new cells.
+# CelLua Machine
+A fanmade version of Sam Hogan's Cell Machine, based heavily off the Mystic Mod, that adds a bunch of new cells and features.
 ## Running
 1. Download a release, preferably the latest one (should be a .love file)
 2. Download and install LOVE at https://love2d.org
 3. Double-click the .love file (might not work on all OS, for more info see https://love2d.org/wiki/Getting_Started#Running_Games)
 ## Sharing Levels
+When you click the save button, the code for your level will simply be copied straight to your clipboard.
 If you use an app or website to share levels that has markdown, like Discord, use some method of supressing it, otherwise it's possible that the code will not be posted properly. The easiest way with Discord is to surround your code in two \` marks.
 ## Compiling mods
 1. Create a zip file of the whole game directory (make sure the zip contains the files and *not* the folder OF the files)
@@ -83,8 +84,30 @@ From left to right: OR, AND, XOR, NOR, NAND, XNOR <br>
 Ghost Cell - Acts like a wall cell that cannot be generated, similar to the level border in the Mystic Mod.<br>
 ![image](https://user-images.githubusercontent.com/71151507/127099228-cd03e282-1d3a-41bf-9b4c-26490defd86f.png)
 
+Bias Cell - Acts sort of like a frozen mover cell, it will add force to a mover that pushes with it and subtract force from a mover that pushes against it but never moves itself. <br>
+![image](https://user-images.githubusercontent.com/71151507/127790970-efada7d0-49d3-43d2-ab10-68ffa2d6e927.png)
+
+Replicator Cell - Basically a generator that generates the cell in front of it. Has a cross variant. <br>
+![image](https://user-images.githubusercontent.com/71151507/127790974-ca4f2c12-7b16-49a1-a86c-4455dcfb04b1.png)
+![image](https://user-images.githubusercontent.com/71151507/127790979-31ac7e7e-20e9-4bd2-a07c-75e238414540.png)
+
+Intaker Cell - Described by KyYay as "some unholy abomination of a trash cell, an impulse cell, and some sort of weird reverse generator". Basically sucks cells in and destroys them. <br>
+![image](https://user-images.githubusercontent.com/71151507/127790986-bce70bd9-e955-4a39-b075-4f5295d3b664.png)
+
+Shield Cell - Protects the cells around it from crashing into enemy cells, being crashed into by enemy cells, or being transformed into fungus.<br>
+![image](https://user-images.githubusercontent.com/71151507/127791071-993f3893-7768-4790-8992-1d91018aded4.png)
+
+Fungal Cell - Transforms any cells that get pushed into it into more fungus cells.<br>
+![image](https://user-images.githubusercontent.com/71151507/127791074-24b3e584-629d-4628-99ce-c25388a94aa1.png)
+
+Forker Cell - Acts sort of like a diverger, but it's one-way and duplicates cells that come into it. Currently does not work with pulling, only pushing.<br>
+NOTE: Thse cells are very unstable if used in a nuke, and are very very likely to crash your game. If you use them in a nuke, do not blame me for what happens.
+![image](https://user-images.githubusercontent.com/71151507/127791086-ab71252d-802e-4c46-ac83-e64b48a1db83.png)
+![image](https://user-images.githubusercontent.com/71151507/127791139-7a469fe1-12be-4349-81af-af8053a8bcb8.png)
+
 Current priority system (updating from left to right) <br>
-![image](https://user-images.githubusercontent.com/71151507/127073266-165dfc09-01c7-469d-8e1a-d3a55e01f598.png) <br>
-(Cross generators are like normal generators but are activated in two different subticks, and angled generators are both updated after normal/cross generators)<br>
+![image](https://user-images.githubusercontent.com/71151507/127786793-92fb4a1a-f7b5-46d9-a78b-c5a67894ce95.png) <br>
+(Cross generators are like normal generators but are activated in two different subticks, and angled generators are updated after normal/cross generators)<br>
+(The same logic applies to replicators)<br>
 (Twist generators update at the same time as normal generators)<br>
 (All types of gate cells update at the same time)
