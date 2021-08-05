@@ -1,7 +1,7 @@
 # CelLua Machine
 A fanmade version of Sam Hogan's Cell Machine, based heavily off the Mystic Mod, that adds a bunch of new cells and features.
 ## Running
-1. Download a release, preferably the latest one (should be a .love file)
+1. Download a release, preferably the latest one, at https://github.com/KyYay/CelLua-Machine/releases
 2. Download and install LOVE at https://love2d.org
 3. Double-click the .love file (might not work on all OS, for more info see https://love2d.org/wiki/Getting_Started#Running_Games)
 ## Sharing Levels
