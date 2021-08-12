@@ -11,6 +11,8 @@ If you use an app or website to share levels that has markdown, like Discord, us
 1. Create a zip file of the whole game directory (make sure the zip contains the files and *not* the folder OF the files)
 2. Rename the .zip to .love <br>
 For more info see https://love2d.org/wiki/Game_Distribution#Create_a_.love-file
+## Basic Terminology
+Semi-immovable - A cell that cannot be moved by pushing or pulling, but can still be moved by position-swapping cells like mirrors and gears. Gate cells are an example of this.
 ## New Cells
 Trash Cell - Deletes any cells that get pushed into it. Taken from the Mystic Mod. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050831-631a3a5e-856f-418b-a6a5-0d82c4834672.png)
@@ -23,6 +25,7 @@ One/Two/Three Directional - Can only be pushed towards the marked directions. <b
 
 Mirror Cell - Swaps the cells that it's arrows point to. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050777-9a8072e9-88d6-453c-84f5-43e31b175d9a.png)
+![image](https://user-images.githubusercontent.com/71151507/129133790-319f2167-1cd9-40c4-8c92-fb0c3a856dcd.png)
 
 Puller Cell - Pulls cells. Does not push cells. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050778-88e20293-cea0-4c5c-a925-e1a74ae26202.png)
@@ -30,6 +33,8 @@ Puller Cell - Pulls cells. Does not push cells. <br>
 Diverger Cell - Any forces that come into the sides which the arrows point to get rotated 90° and teleported to the end of the diverger. This is a dangerous cell to play with, as it's very concept provides the possibility of infinite loops; I have done my best to prevent these, but if an infinite loop slips by, it will stop the loop and create a trash cell, for debugging purposes. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050780-6e618371-dfce-4482-b580-87d5b6cac04b.png)
 ![image](https://user-images.githubusercontent.com/71151507/126437594-23d8c6c9-2389-4a0f-b4cb-ffd15b14dc73.png)
+![image](https://user-images.githubusercontent.com/71151507/129133820-a32bc89b-67c8-4270-b996-7204b47771c5.png)
+![image](https://user-images.githubusercontent.com/71151507/129133824-0087fa14-4d51-465c-be3a-34a01603ee2e.png)
 
 Redirector Cell - Sets the rotation of the 4 cells it touches to it's own rotation. Wont affect other redirectors. <br>
 ![image](https://user-images.githubusercontent.com/71151507/126050783-5fd81eeb-c7f5-433a-b894-36390eb88dfe.png)
@@ -101,13 +106,33 @@ Fungal Cell - Transforms any cells that get pushed into it into more fungus cell
 ![image](https://user-images.githubusercontent.com/71151507/127791074-24b3e584-629d-4628-99ce-c25388a94aa1.png)
 
 Forker Cell - Acts sort of like a diverger, but it's one-way and duplicates cells that come into it. Currently does not work with pulling, only pushing.<br>
-NOTE: Thse cells are very unstable if used in a nuke, and are very very likely to crash your game. If you use them in a nuke, do not blame me for what happens.<br>
+NOTE: These cells are very unstable if used in a nuke, and are very very likely to crash your game. You have been warned. <br>
 ![image](https://user-images.githubusercontent.com/71151507/127791086-ab71252d-802e-4c46-ac83-e64b48a1db83.png)
 ![image](https://user-images.githubusercontent.com/71151507/127791139-7a469fe1-12be-4349-81af-af8053a8bcb8.png)
 
+Demolisher Cell - Acts like a trash cell, but when something is pushed into it, it also destroys the 4 cells around it (if they are destroyable). <br>
+![image](https://user-images.githubusercontent.com/71151507/129134219-68c8d8ca-a070-42e4-9f26-26fa734ff3a0.png)
+
+Opposition Cell - Can be pushed in the direction of the blue arrow, and pulled in the direction of the pink arrow. Yellow line represents being able to be both pushed and pulled in both directions that the line points in, like a slide cell. <br>
+![image](https://user-images.githubusercontent.com/71151507/129134269-6b6d9c28-5017-4653-8622-754bdd8ec9a3.png)
+![image](https://user-images.githubusercontent.com/71151507/129134282-54b95e5b-f8dc-4e1b-8d16-640036992434.png)
+![image](https://user-images.githubusercontent.com/71151507/129134295-ea119d80-b00c-4d6c-95e6-09cfa49b8dfa.png)
+
+Super Repulsor Cell - Acts like a repulsor, but it will push cells infinitely until it either comes across an obstacle or realizes it's in an infinite loop. <br>
+![image](https://user-images.githubusercontent.com/71151507/129133999-c803ac2c-0313-4389-add9-d2cfde2141c6.png)
+
+Super Generator Cell - Generates the entire row of cells behind it. Will not generate if it gets in an infinite loop. <br>
+![image](https://user-images.githubusercontent.com/71151507/129133932-584544b2-364e-4548-a6a4-94acb248be1f.png)
+
+Double Rotator Cell - Acts like a cw rotator on two sides, and like a ccw rotator on the other two. <br>
+![image](https://user-images.githubusercontent.com/71151507/129133999-c803ac2c-0313-4389-add9-d2cfde2141c6.png)
+
+Driller Cell - Acts sort of like a mirror cell, but it swaps the cell it's pointing to with itself (or deletes itself if it tries to swap a trash or demolisher cell). Has no actual pushing or pulling force. <br>
+![image](https://user-images.githubusercontent.com/71151507/129170430-d7a0289d-6b17-4313-ba6f-87fee77297ee.png)
+
 Current priority system (updating from left to right) <br>
-![image](https://user-images.githubusercontent.com/71151507/127786793-92fb4a1a-f7b5-46d9-a78b-c5a67894ce95.png) <br>
+![image](https://user-images.githubusercontent.com/71151507/129170459-4d88cc0e-19b0-4305-ba96-bdfba2e1baee.png) <br>
 (Cross generators are like normal generators but are activated in two different subticks, and angled generators are updated after normal/cross generators)<br>
-(The same logic applies to replicators)<br>
+(The same logic applies to replicators and the cross mirror)<br>
 (Twist generators update at the same time as normal generators)<br>
 (All types of gate cells update at the same time)

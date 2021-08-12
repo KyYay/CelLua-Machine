@@ -1,7 +1,7 @@
+utf8 = require "utf8"
 local cells,delay,dtime,currentstate,currentrot,tex,zoom,offx,offy,placecells,interpolate,inmenu,tpu,updatekey,dodebug,itime,initial,isinitial,
-paused,placeables,newwidth,newheight,showinstructions,chunks,ticknum,selecting,volume,copied,selx,sely,selw,selh,pasting,undocells,page,border,wasinitial,typing,subtick =
-{},0.2,0,1,0,{},20,0,0,true,true,false,1,0,false,0,{},true,true,{},100,100,true,{},0,false,0.5,nil,0,0,0,0,false,nil,1,2,true,false,false
-
+paused,placeables,newwidth,newheight,showinstructions,chunks,ticknum,selecting,volume,copied,selx,sely,selw,selh,pasting,undocells,page,border,wasinitial,typing,subtick,supdatekey =
+{},0.2,0,1,0,{},20,0,0,true,true,false,1,0,false,0,{},true,true,{},100,100,true,{},0,false,0.5,nil,0,0,0,0,false,nil,1,2,true,false,false,0
 local width,height = 102,102
 love.graphics.setDefaultFilter("nearest")
 tex[-2],tex[-1],tex[0] = love.graphics.newImage("placeable.png"),love.graphics.newImage("wall.png"),love.graphics.newImage("bg.png")
@@ -21,6 +21,9 @@ tex[37],tex[38],tex[39] = love.graphics.newImage("straightdiverger.png"),love.gr
 tex[40],tex[41],tex[42] = love.graphics.newImage("ghost.png"),love.graphics.newImage("bias.png"),love.graphics.newImage("shield.png")
 tex[43],tex[44],tex[45] = love.graphics.newImage("intaker.png"),love.graphics.newImage("replicator.png"),love.graphics.newImage("crossreplicator.png")
 tex[46],tex[47],tex[48] = love.graphics.newImage("fungal.png"),love.graphics.newImage("forker.png"),love.graphics.newImage("tripleforker.png")
+tex[49],tex[50],tex[51] = love.graphics.newImage("super_repulsor.png"),love.graphics.newImage("demolisher.png"),love.graphics.newImage("opposition.png")
+tex[52],tex[53],tex[54] = love.graphics.newImage("crossopposition.png"),love.graphics.newImage("slideopposition.png"),love.graphics.newImage("supergenerator.png")
+tex[55],tex[56],tex[57] = love.graphics.newImage("crossmirror.png"),love.graphics.newImage("doublerotator.png"),love.graphics.newImage("driller.png")
 tex.setinitial = love.graphics.newImage("setinitial.png")
 tex.pix = love.graphics.newImage("pixel.png")
 tex.menu = love.graphics.newImage("menu.png")
@@ -31,8 +34,25 @@ tex.copy = love.graphics.newImage("copy.png")
 tex.cut = love.graphics.newImage("cut.png") 
 tex.paste = love.graphics.newImage("paste.png")
 tex.nonexistant = love.graphics.newImage("nonexistant.png")
-local listorder = {0,-2,40,-1,1,13,27,2,22,25,26,3,4,5,6,7,21,8,9,10,16,29,17,18,20,28,14,15,30,37,38,11,12,23,24,19,31,32,33,34,35,36,39,41,42,43,44,45,46,47,48}
-local bgsprites,winx,winy,winxm,winym
+--[[local path = love.filesystem.getSourceBaseDirectory()								--this crap doesn't work >:(
+if (love.filesystem.getInfo(path.."/cellua-textures") or {})[1] == "directory" then
+	for i=-2,48 do
+		if love.filesystem.getInfo(path.."/cellua-textures/"..i..".png")[1] == "file" then
+			local idata = love.image.newImageData(love.filesystem.read(path.."/cellua-textures/"..i..".png"))
+			tex[i] = love.graphics.newImage(idata)
+		end
+	end
+end]]
+local texsize = {}
+for k,v in pairs(tex) do
+	texsize[k] = {}
+	texsize[k].w = tex[k]:getWidth()
+	texsize[k].h = tex[k]:getHeight()
+	texsize[k].w2 = tex[k]:getWidth()/2	--for optimization
+	texsize[k].h2 = tex[k]:getHeight()/2
+end
+local listorder = {0,-2,40,-1,1,13,27,57,2,22,25,26,39,54,44,45,3,4,5,6,7,51,52,53,8,9,10,56,16,29,17,18,20,49,28,14,55,15,30,37,38,11,50,12,23,24,19,46,31,32,33,34,35,36,41,21,42,43,47,48}
+local bgsprites,winx,winy,winxm,winymc
 local destroysound = love.audio.newSource("destroy.wav", "static")
 local beep = love.audio.newSource("beep.wav", "static")
 local music = love.audio.newSource("music.wav", "stream")
@@ -66,9 +86,9 @@ local function SetChunk(x,y,ctype)
 		chunks[math.floor(y/25)][math.floor(x/25)].hasgenerator = true
 	elseif ctype == 13 then
 		chunks[math.floor(y/25)][math.floor(x/25)].haspuller = true
-	elseif ctype == 8 or ctype == 9 or ctype == 10 then
+	elseif ctype == 8 or ctype == 9 or ctype == 10 or ctype == 56 then
 		chunks[math.floor(y/25)][math.floor(x/25)].hasrotator = true
-	elseif ctype == 14 then
+	elseif ctype == 14 or ctype == 55 then
 		chunks[math.floor(y/25)][math.floor(x/25)].hasmirror = true
 	elseif ctype == 17 or ctype == 18 then
 		chunks[math.floor(y/25)][math.floor(x/25)].hasgear = true
@@ -96,6 +116,12 @@ local function SetChunk(x,y,ctype)
 		chunks[math.floor(y/25)][math.floor(x/25)].hasintaker = true
 	elseif ctype == 44 or ctype == 45 then
 		chunks[math.floor(y/25)][math.floor(x/25)].hasreplicator = true
+	elseif ctype == 49 then
+		chunks[math.floor(y/25)][math.floor(x/25)].hassuperrep = true
+	elseif ctype == 54 then
+		chunks[math.floor(y/25)][math.floor(x/25)].hassupergenerator = true
+	elseif ctype == 57 then
+		chunks[math.floor(y/25)][math.floor(x/25)].hasdriller = true
 	end
 end
 
@@ -133,15 +159,9 @@ cheatsheet["-"] = 67 cheatsheet["."] = 68 cheatsheet["="] = 69 cheatsheet["?"] =
 cheatsheet["{"] = 72 cheatsheet["}"] = 73 cheatsheet["/"] = 74 cheatsheet["#"] = 75 cheatsheet["_"] = 76
 cheatsheet["*"] = 77 cheatsheet["'"] = 78 cheatsheet[":"] = 79 cheatsheet[","] = 80 cheatsheet["@"] = 81
 cheatsheet["~"] = 82 cheatsheet["|"] = 83
-for i=0,9 do cheatsheet[i] = tostring(i) end
-for i=0,25 do cheatsheet[10+i] = string.char(string.byte("a")+i) end
-for i=0,25 do cheatsheet[36+i] = string.char(string.byte("A")+i) end
-cheatsheet[62] = "!" cheatsheet[63] = "$" cheatsheet[64] = "%" cheatsheet[65] = "&" cheatsheet[66] = "+" 
-cheatsheet[67] = "-" cheatsheet[68] = "." cheatsheet[69] = "=" cheatsheet[70] = "?" cheatsheet[71] = "^" 
-cheatsheet[72] = "{" cheatsheet[73] = "}" cheatsheet[74] = "/" cheatsheet[75] = "#" cheatsheet[76] = "_"
-cheatsheet[77] = "*" cheatsheet[78] = "'" cheatsheet[79] = ":" cheatsheet[80] = "," cheatsheet[81] = "@"
-cheatsheet[82] = "~" cheatsheet[83] = "|"
-
+for k,v in pairs(cheatsheet) do
+	cheatsheet[v] = k				--basically "invert" table
+end
 
 local function unbase74(origvalue)
 	local result = 0
@@ -184,6 +204,7 @@ local function base84(origvalue)
 	return result
 	end
 end
+
 local V3Cells = {}
 V3Cells["0"] = {2,0,false} V3Cells["i"] = {2,1,false} V3Cells["A"] = {2,2,false} V3Cells["S"] = {2,3,false}
 V3Cells["1"] = {2,0,true} V3Cells["j"] = {2,1,true} V3Cells["B"] = {2,2,true} V3Cells["T"] = {2,3,true} 
@@ -203,15 +224,15 @@ V3Cells["e"] = {12,0,false} V3Cells["w"] = {12,1,false} V3Cells["O"] = {12,2,fal
 V3Cells["f"] = {12,0,true} V3Cells["x"] = {12,1,true} V3Cells["P"] = {12,2,true} V3Cells["="] = {12,3,true} 
 V3Cells["g"] = {11,0,false} V3Cells["y"] = {11,1,false} V3Cells["Q"] = {11,2,false} V3Cells["?"] = {11,3,false}
 V3Cells["h"] = {11,0,true} V3Cells["z"] = {11,1,true} V3Cells["R"] = {11,2,true} V3Cells["^"] = {11,3,true} 
-V3Cells["{"] = {0,0,false} V3Cells["}"] = {0,0,true}
-V3Cells["^"] = {0,0,false}
+V3Cells["{"] = {0,0,false} V3Cells["}"] = {0,0,true} V3Cells["^"] = {0,0,false} V3Cells[":"] = {0,0,false}
 
 local function CellToNum(y,x,hasplaceables)
 	if x >= 1 and y >= 1 and x < width-1 and y < height-1 then
 		if hasplaceables then
 			if initial[y][x].ctype == 0 or initial[y][x].ctype == -1 or cells[y][x].ctype == 40 or initial[y][x].ctype == 3 or initial[y][x].ctype == 11 or initial[y][x].ctype == 12 or initial[y][x].ctype == 23
 			or initial[y][x].ctype == 20 or initial[y][x].ctype == 28 or initial[y][x].ctype == 21 or initial[y][x].ctype == 24 or initial[y][x].ctype == 8 or initial[y][x].ctype == 9 or initial[y][x].ctype == 10
-			or initial[y][x].ctype == 19 or initial[y][x].ctype == 17 or initial[y][x].ctype == 18 or initial[y][x].ctype == 38 or initial[y][x].ctype == 42 or initial[y][x].ctype == 46 then	--cells who dont care about rotations
+			or initial[y][x].ctype == 19 or initial[y][x].ctype == 17 or initial[y][x].ctype == 18 or initial[y][x].ctype == 38 or initial[y][x].ctype == 42 or initial[y][x].ctype == 46 or initial[y][x].ctype == 49
+			or initial[y][x].ctype == 50 or initial[y][x].ctype == 55 then	--cells who dont care about rotations
 				return (initial[y][x].ctype+1)*8 + ((placeables[y][x] and 1) or 0)
 			elseif initial[y][x].ctype == 4 or initial[y][x].ctype == 14 or initial[y][x].ctype == 29 or initial[y][x].ctype == 30 or initial[y][x].ctype == 37 then	--cells who effectively only have 2 rotations
 				return (initial[y][x].ctype+1)*8 + (initial[y][x].rot)%2*2 + ((placeables[y][x] and 1) or 0)
@@ -221,7 +242,8 @@ local function CellToNum(y,x,hasplaceables)
 		else
 			if initial[y][x].ctype == 0 or initial[y][x].ctype == -1 or cells[y][x].ctype == 40 or initial[y][x].ctype == 3 or initial[y][x].ctype == 11 or initial[y][x].ctype == 12 or initial[y][x].ctype == 23
 			or initial[y][x].ctype == 20 or initial[y][x].ctype == 28 or initial[y][x].ctype == 21 or initial[y][x].ctype == 24 or initial[y][x].ctype == 8 or initial[y][x].ctype == 9 or initial[y][x].ctype == 10
-			or initial[y][x].ctype == 19 or initial[y][x].ctype == 17 or initial[y][x].ctype == 18 or initial[y][x].ctype == 38 or initial[y][x].ctype == 42 or initial[y][x].ctype == 46 then	--cells who dont care about rotations
+			or initial[y][x].ctype == 19 or initial[y][x].ctype == 17 or initial[y][x].ctype == 18 or initial[y][x].ctype == 38 or initial[y][x].ctype == 42 or initial[y][x].ctype == 46 or initial[y][x].ctype == 49
+			or initial[y][x].ctype == 50 or initial[y][x].ctype == 55 then	--cells who dont care about rotations
 				return (initial[y][x].ctype+1)*4 + ((placeables[y][x] and 1) or 0)
 			elseif initial[y][x].ctype == 4 or initial[y][x].ctype == 14 or initial[y][x].ctype == 29 or initial[y][x].ctype == 30 or initial[y][x].ctype == 37 then	--cells who effectively only have 2 rotations
 				return (initial[y][x].ctype+1)*4 + initial[y][x].rot%2
@@ -767,6 +789,8 @@ local function DecodeK2(code)
 					initial[y][x].ctype = 40
 				elseif border == 3 then
 					initial[y][x].ctype = 11
+				elseif border == 4 then
+					initial[y][x].ctype = 50
 				end
 			end
 			cells[y][x].ctype = initial[y][x].ctype
@@ -992,7 +1016,10 @@ local function PushCell(x,y,dir,updateforces,force,replacetype,replacerot,replac
 		elseif checkedtype == -1 or checkedtype == 40 or checkedtype == 4 and direction%2 ~= checkedrot%2
 		or checkedtype == 5 and direction ~= checkedrot
 		or checkedtype == 6 and (direction ~= checkedrot and direction ~= (checkedrot-1)%4)
-		or checkedtype == 7 and direction == (checkedrot+2)%4 then
+		or checkedtype == 7 and direction == (checkedrot+2)%4 
+		or checkedtype == 51 and direction ~= checkedrot 
+		or checkedtype == 52 and (direction ~= checkedrot and direction ~= (checkedrot-1)%4)
+		or checkedtype == 53 and direction == (checkedrot+2)%4 then
 			if checkedtype ~= -1 and checkedtype ~= 40 and reps ~= 1 and not checkedprot and (lasttype == 12 or lasttype == 23) then
 				break
 			else
@@ -1035,8 +1062,10 @@ local function PushCell(x,y,dir,updateforces,force,replacetype,replacerot,replac
 				lastupd = checkedupd
 				lastprot = checkedprot
 				addedrot = 0
-				if checkedtype == 20 or checkedtype == 21 then
+				if (checkedtype == 20 and not pushingdiverger) or checkedtype == 21 then
 					totalforce = totalforce - 1
+				elseif checkedtype == 49 and not pushingdiverger then
+					totalforce = 0
 				elseif checkedtype == 15 or (checkedtype == 47 or checkedtype == 48) and checkedrot == (direction+2)%4 then 
 					pushingdiverger = true
 				elseif checkedtype == 46 then 
@@ -1055,7 +1084,7 @@ local function PushCell(x,y,dir,updateforces,force,replacetype,replacerot,replac
 			break
 		end
 		cells[cy][cx].updatekey = updatekey
-	until totalforce <= 0 or checkedtype == 0 or checkedtype == 11 or checkedtype == 43 and checkedrot == (direction+2)%4 or (checkedtype == 47 or checkedtype == 48) and checkedrot == direction and not checkedupd
+	until totalforce <= 0 or checkedtype == 0 or checkedtype == 11 or checkedtype == 50 or checkedtype == 43 and checkedrot == (direction+2)%4 or (checkedtype == 47 or checkedtype == 48) and checkedrot == direction and not checkedupd
 	--movement time
 	cells[cy][cx].testvar = "end"
 	if totalforce > 0 then
@@ -1078,8 +1107,16 @@ local function PushCell(x,y,dir,updateforces,force,replacetype,replacerot,replac
 				cy = cy + 1
 			end
 			if cx < 0 or cy < 0 then error(cx.." "..cy..":"..x.." "..y) end
-			if cells[cy][cx].ctype == 11 or cells[cy][cx].ctype == 43 and cells[cy][cx].rot == (direction+2)%4 then
-				if storedcell.ctype ~= 0 then love.audio.play(destroysound) end
+			if cells[cy][cx].ctype == 11 or  cells[cy][cx].ctype == 50 or cells[cy][cx].ctype == 43 and cells[cy][cx].rot == (direction+2)%4 then
+				if storedcell.ctype ~= 0 then
+					love.audio.play(destroysound)
+					if cells[cy][cx].ctype == 50 then
+						if cx < width-1 and (not cells[cy][cx+1].protected and cells[cy][cx+1].ctype ~= -1 and cells[cy][cx+1].ctype ~= 11 and cells[cy][cx+1].ctype ~= 40 and cells[cy][cx+1].ctype ~= 50) then cells[cy][cx+1].ctype = 0 end
+						if cx > 0 and (not cells[cy][cx-1].protected and cells[cy][cx-1].ctype ~= -1 and cells[cy][cx-1].ctype ~= 11 and cells[cy][cx-1].ctype ~= 40 and cells[cy][cx-1].ctype ~= 50) then cells[cy][cx-1].ctype = 0 end
+						if cy < height-1 and (not cells[cy+1][cx].protected and cells[cy+1][cx].ctype ~= -1 and cells[cy+1][cx].ctype ~= 11 and cells[cy+1][cx].ctype ~= 40 and cells[cy+1][cx].ctype ~= 50) then cells[cy+1][cx].ctype = 0 end
+						if cy > 0 and (not cells[cy-1][cx].protected and cells[cy-1][cx].ctype ~= -1 and cells[cy-1][cx].ctype ~= 11 and cells[cy-1][cx].ctype ~= 40 and cells[cy-1][cx].ctype ~= 50) then cells[cy-1][cx].ctype = 0 end
+					end
+				end
 				break
 			elseif (cells[cy][cx].ctype == 47 or cells[cy][cx].ctype == 48) and cells[cy][cx].rot == direction and not cells[cy][cx].updated then
 				cells[cy][cx].updated = true
@@ -1185,7 +1222,7 @@ local function PushCell(x,y,dir,updateforces,force,replacetype,replacerot,replac
 		return false
 	end
 	updatekey = updatekey + 1
-	return true
+	return true,cx,cy,direction
 end
 
 local function PullCell(x,y,dir,ignoreblockage,force,updateforces,dontpull,advancer)	--same story as pushcell, but pulls; x/y is the actual cell you want to be the puller here, instead of the origin
@@ -1209,7 +1246,7 @@ local function PullCell(x,y,dir,ignoreblockage,force,updateforces,dontpull,advan
 			elseif direction == 1 then
 				cy = cy + 1
 			end
-			if cells[cy][cx].ctype == 0 or cells[cy][cx].ctype == 11 or not cells[y][x].protected and (cells[cy][cx].ctype == 12 or cells[cy][cx].ctype == 23)
+			if cells[cy][cx].ctype == 0 or cells[cy][cx].ctype == 11 or cells[cy][cx].ctype == 50 or not cells[y][x].protected and (cells[cy][cx].ctype == 12 or cells[cy][cx].ctype == 23)
 			or (cells[cy][cx].ctype >= 31 and cells[cy][cx].ctype <= 36 and cells[cy][cx].rot%2 == (direction+1)%2) or cells[cy][cx].ctype == 43 and cells[cy][cx].rot == (direction+2)%4 then
 				break
 			elseif cells[cy][cx].ctype == 15 and ((cells[cy][cx].rot+2)%4 == direction or (cells[cy][cx].rot+3)%4 == direction) then
@@ -1268,6 +1305,10 @@ local function PullCell(x,y,dir,ignoreblockage,force,updateforces,dontpull,advan
 					if updateforces and checkedrot%2 == direction%2 and (not advancer or (checkedtype ~= 27 or checkedrot == direction)) then
 						cells[cy][cx].updated = true
 					end
+				else
+					if updateforces and checkedrot == direction and checkedtype ~= 13 then
+						cells[cy][cx].updated = true
+					end
 				end
 				cells[lastcy][lastcx].projectedtype = checkedtype
 				cells[lastcy][lastcx].projectedrot = (checkedrot-addedrot)%4
@@ -1277,10 +1318,14 @@ local function PullCell(x,y,dir,ignoreblockage,force,updateforces,dontpull,advan
 			elseif checkedtype == -1 or checkedtype == 40 or checkedtype == 4 and direction%2 ~= checkedrot%2
 			or checkedtype == 5 and direction ~= checkedrot
 			or checkedtype == 6 and (direction ~= checkedrot and direction ~= (checkedrot-1)%4)
-			or checkedtype == 7 and direction == (checkedrot+2)%4 then
+			or checkedtype == 7 and direction == (checkedrot+2)%4
+			or checkedtype == 51 and direction ~= (checkedrot+2)%4
+			or checkedtype == 52 and (direction ~= (checkedrot+1)%4 and direction ~= (checkedrot+2)%4)
+			or checkedtype == 53 and direction == checkedrot then
 				break
-			elseif checkedtype == 5 or checkedtype == 6 --these two either stop the puller or face towards it with the other side unpullable, so we dont need to check their rotation
-			or checkedtype == 7 and direction == checkedrot then
+			elseif checkedtype == 5 or checkedtype == 6 or checkedtype == 51 or checkedtype == 52 --if these dont stop the puller, then they face towards it with the other side unpullable, so we dont need to check their rotation
+			or checkedtype == 7 and direction == checkedrot
+			or checkedtype == 53 and direction == (checkedrot+2)%4 then
 				cells[lastcy][lastcx].projectedtype = checkedtype
 				cells[lastcy][lastcx].projectedrot = (checkedrot-addedrot)%4
 				addedrot = 0
@@ -1303,7 +1348,7 @@ local function PullCell(x,y,dir,ignoreblockage,force,updateforces,dontpull,advan
 					direction = (direction-1)%4
 				end
 				addedrot = addedrot + (direction-olddir)
-			elseif checkedtype == 20 or checkedtype == 21 or checkedtype == 28 then
+			elseif checkedtype == 21 or (checkedtype == 28 and not ignoreforce) then
 				totalforce = totalforce - 1
 				cells[lastcy][lastcx].projectedtype = checkedtype
 				cells[lastcy][lastcx].projectedrot = (checkedrot-addedrot)%4
@@ -1322,9 +1367,10 @@ local function PullCell(x,y,dir,ignoreblockage,force,updateforces,dontpull,advan
 			cells[cy][cx].crosses = ((cells[cy][cx].updatekey == updatekey and cells[cy][cx].crosses) or 0) + 1
 			if cells[cy][cx].crosses == 3 then		--a cell being checked 3 times in one subtick means it's in an infinite loop, and a bad one at that; the chain will stop in case of this emergency.
 				totalforce = 0
+				break
 			end
 			cells[cy][cx].updatekey = updatekey
-		until (totalforce <= 0 and checkedtype ~= 15 and checkedtype ~= 30 and checkedtype ~= 37 and checkedtype ~= 38) or checkedtype == 0 or checkedtype == 11 or checkedtype == 12 or checkedtype == 23
+		until (totalforce <= 0 and checkedtype ~= 15 and checkedtype ~= 30 and checkedtype ~= 37 and checkedtype ~= 38) or checkedtype == 0 or checkedtype == 11 or checkedtype == 50 or checkedtype == 12 or checkedtype == 23
 		--movement time
 		cells[cy][cx].testvar = "end"
 		if totalforce > 0 then
@@ -1347,7 +1393,7 @@ local function PullCell(x,y,dir,ignoreblockage,force,updateforces,dontpull,advan
 				elseif direction == 1 then
 					cy = cy - 1
 				end
-				if cells[cy][cx].ctype == 11 or cells[cy][cx].ctype == 12 or cells[cy][cx].ctype == 23 or cells[cy][cx].ctype >= 31 and cells[cy][cx].ctype <= 36 then
+				if cells[cy][cx].ctype == 11 or cells[cy][cx].ctype == 50 or cells[cy][cx].ctype == 12 or cells[cy][cx].ctype == 23 or cells[cy][cx].ctype >= 31 and cells[cy][cx].ctype <= 36 then
 					if reps ~= 1 then
 						cells[lastcy][lastcx].ctype = 0
 					end
@@ -1371,21 +1417,29 @@ local function PullCell(x,y,dir,ignoreblockage,force,updateforces,dontpull,advan
 				elseif cells[cy][cx].ctype == -1 or cells[cy][cx].ctype == 40 or cells[cy][cx].ctype == 4 and direction%2 ~= cells[cy][cx].rot%2
 				or cells[cy][cx].ctype == 5 and direction ~= cells[cy][cx].rot
 				or cells[cy][cx].ctype == 6 and (direction ~= cells[cy][cx].rot and direction ~= (cells[cy][cx].rot-1)%4)
-				or cells[cy][cx].ctype == 7 and direction == (cells[cy][cx].rot+2)%4 then
+				or cells[cy][cx].ctype == 7 and direction == (cells[cy][cx].rot+2)%4
+				or cells[cy][cx].ctype == 51 and direction ~= (cells[cy][cx].rot+2)%4
+				or cells[cy][cx].ctype == 52 and (direction ~= (cells[cy][cx].rot+1)%4 and direction ~= (cells[cy][cx].rot+2)%4)
+				or cells[cy][cx].ctype == 53 and direction == cells[cy][cx].rot then
 					if reps ~= 1 then
 						cells[lastcy][lastcx].ctype = 0
 					end
 					break
 				elseif cells[cy][cx].pulleddir == direction then
-					cells[lastcy][lastcx] = CopyCell(cx,cy)
-					cells[lastcy][lastcx].rot = (cells[cy][cx].rot-addedrot)%4
-					if dontpull then cells[lastcy][lastcx].pulleddir = (direction-addedrot)%4 end
-					SetChunk(lastcx,lastcy,cells[lastcy][lastcx].ctype)
+					cells[lastcy][lastcx].ctype = 0
 					break
 				elseif not ((cells[cy][cx].ctype == 37 and cells[cy][cx].rot%2 == direction%2) or cells[cy][cx].ctype == 38) then
 					if lastcx == frontcx and lastcy == frontcy then
-						if cells[frontcy][frontcx].ctype == 11 or cells[frontcy][frontcx].ctype == 43 and (cells[frontcy][frontcx].rot+addedrot)%4 == (direction+2)%4 then
-							if cells[cy][cx].ctype ~= 0 then love.audio.play(destroysound) end
+						if cells[frontcy][frontcx].ctype == 11 or cells[frontcy][frontcx].ctype == 50 or cells[frontcy][frontcx].ctype == 43 and (cells[frontcy][frontcx].rot+addedrot)%4 == (direction+2)%4 then
+							if cells[cy][cx].ctype ~= 0 then
+								love.audio.play(destroysound)
+								if cells[frontcy][frontcx].ctype == 50 then
+									if frontcx < width-1 and (not cells[frontcy][frontcx+1].protected and cells[frontcy][frontcx+1].ctype ~= -1 and cells[frontcy][frontcx+1].ctype ~= 11 and cells[frontcy][frontcx+1].ctype ~= 40 and cells[frontcy][frontcx+1].ctype ~= 50) then cells[frontcy][frontcx+1].ctype = 0 end
+									if frontcx > 0 and (not cells[frontcy][frontcx-1].protected and cells[frontcy][frontcx-1].ctype ~= -1 and cells[frontcy][frontcx-1].ctype ~= 11 and cells[frontcy][frontcx-1].ctype ~= 40 and cells[frontcy][frontcx-1].ctype ~= 50) then cells[frontcy][frontcx-1].ctype = 0 end
+									if frontcy < height-1 and (not cells[frontcy+1][frontcx].protected and cells[frontcy+1][frontcx].ctype ~= -1 and cells[frontcy+1][frontcx].ctype ~= 11 and cells[frontcy+1][frontcx].ctype ~= 40 and cells[frontcy+1][frontcx].ctype ~= 50) then cells[frontcy+1][frontcx].ctype = 0 end
+									if frontcy > 0 and (not cells[frontcy-1][frontcx].protected and cells[frontcy-1][frontcx].ctype ~= -1 and cells[frontcy-1][frontcx].ctype ~= 11 and cells[frontcy-1][frontcx].ctype ~= 40 and cells[frontcy-1][frontcx].ctype ~= 50) then cells[frontcy-1][frontcx].ctype = 0 end
+								end
+							end
 						elseif cells[frontcy][frontcx].ctype == 12 then
 							if cells[cy][cx].ctype ~= 0 then
 								love.audio.play(destroysound)
@@ -1483,9 +1537,9 @@ local function UpdateMirrors()
 	while y < height do
 		while x < width do
 			if GetChunk(x,y).hasmirror then
-				if not cells[y][x].updated and cells[y][x].ctype == 14 and (cells[y][x].rot == 0 or cells[y][x].rot == 2) then
-					if cells[y][x-1].ctype ~= 11 and cells[y][x-1].ctype ~= -1 and cells[y][x-1].ctype ~= 40 and (cells[y][x-1].ctype ~= 14 or cells[y][x-1].rot%2 == 1)
-					and cells[y][x+1].ctype ~= 11 and cells[y][x+1].ctype ~= -1 and cells[y][x+1].ctype ~= 40 and (cells[y][x+1].ctype ~= 14 or cells[y][x+1].rot%2 == 1) then
+				if not cells[y][x].updated and (cells[y][x].ctype == 14 and (cells[y][x].rot == 0 or cells[y][x].rot == 2) or cells[y][x].ctype == 55) then
+					if cells[y][x-1].ctype ~= 11 and cells[y][x-1].ctype ~= 50 and cells[y][x-1].ctype ~= 55 and cells[y][x-1].ctype ~= -1 and cells[y][x-1].ctype ~= 40 and (cells[y][x-1].ctype ~= 14 or cells[y][x-1].rot%2 == 1)
+					and cells[y][x+1].ctype ~= 11 and cells[y][x+1].ctype ~= 50 and cells[y][x+1].ctype ~= 55 and cells[y][x+1].ctype ~= -1 and cells[y][x+1].ctype ~= 40 and (cells[y][x+1].ctype ~= 14 or cells[y][x+1].rot%2 == 1) then
 						local oldcell = CopyCell(x-1,y)
 						cells[y][x-1] = CopyCell(x+1,y)
 						cells[y][x+1] = oldcell
@@ -1505,9 +1559,9 @@ local function UpdateMirrors()
 	while x < width do
 		while y < height do
 			if GetChunk(x,y).hasmirror then
-				if not cells[y][x].updated and cells[y][x].ctype == 14 and (cells[y][x].rot == 1 or cells[y][x].rot == 3) then
-					if cells[y-1][x].ctype ~= 11 and cells[y-1][x].ctype ~= -1 and cells[y-1][x].ctype ~= 40 and (cells[y-1][x].ctype ~= 14 or cells[y-1][x].rot%2 == 0)
-					and cells[y+1][x].ctype ~= 11 and cells[y+1][x].ctype ~= -1 and cells[y+1][x].ctype ~= 40 and (cells[y+1][x].ctype ~= 14 or cells[y+1][x].rot%2 == 0) then
+				if not cells[y][x].updated and (cells[y][x].ctype == 14 and (cells[y][x].rot == 1 or cells[y][x].rot == 3) or cells[y][x].ctype == 55) then
+					if cells[y-1][x].ctype ~= 11 and cells[y-1][x].ctype ~= 55 and cells[y-1][x].ctype ~= 50 and cells[y-1][x].ctype ~= -1 and cells[y-1][x].ctype ~= 40 and (cells[y-1][x].ctype ~= 14 or cells[y-1][x].rot%2 == 0)
+					and cells[y+1][x].ctype ~= 11 and cells[y+1][x].ctype ~= 55 and cells[y+1][x].ctype ~= -1 and cells[y+1][x].ctype ~= 40 and (cells[y+1][x].ctype ~= 14 or cells[y+1][x].rot%2 == 0) then
 						local oldcell = CopyCell(x,y-1)
 						cells[y-1][x] = CopyCell(x,y+1)
 						cells[y+1][x] = oldcell
@@ -1595,6 +1649,148 @@ local function UpdateIntakers()
 	end
 end
 
+local function DoSuperGenerator(x,y,dir)
+	local direction = (dir+2)%4
+	local cx = x
+	local cy = y
+	local addedrot = 0
+	local copied = {}
+	while true do							--what cells to copy?
+		cells[cy][cx].scrosses = (cells[cy][cx].supdatekey or -1) == supdatekey and cells[cy][cx].scrosses or 0
+		if direction == 0 then
+			cx = cx + 1	
+		elseif direction == 2 then
+			cx = cx - 1
+		elseif direction == 3 then
+			cy = cy - 1
+		elseif direction == 1 then
+			cy = cy + 1
+		end
+		if (cells[cy][cx].supdatekey or -1) == supdatekey and cells[cy][cx].scrosses >= 3 then
+			copied = {}
+			cells[cy][cx].testvar = "genbreak"
+			break
+		elseif cells[cy][cx].ctype == 15 and ((cells[cy][cx].rot+2)%4 == direction or (cells[cy][cx].rot+3)%4 == direction) then
+			local olddir = direction
+			if (cells[cy][cx].rot+3)%4 == direction then
+				direction = (direction+1)%4
+			else
+				direction = (direction-1)%4
+			end
+			addedrot = addedrot - (direction-olddir)
+		elseif cells[cy][cx].ctype == 30 then
+			local olddir = direction
+			if (cells[cy][cx].rot+3)%2 == direction%2 then
+				direction = (direction+1)%4
+			else
+				direction = (direction-1)%4
+			end
+			addedrot = addedrot - (direction-olddir)
+		elseif (cells[cy][cx].ctype == 47 or cells[cy][cx].ctype == 48) and (cells[cy][cx].rot+2)%2 ~= direction%2 then
+			local olddir = direction
+			if (cells[cy][cx].rot+1)%4 == direction then
+				direction = (direction+1)%4
+			else
+				direction = (direction-1)%4
+			end
+			addedrot = addedrot - (direction-olddir)
+		elseif cx == 0 or cx == width - 1 or cy == 0 or cy == height - 1 then
+			if cells[cy][cx].ctype ~= 0 and cells[cy][cx].ctype ~= 40 then
+				local c = CopyCell(cx,cy)
+				c.rot = (c.rot+addedrot)%4
+				table.insert(copied,c)
+			end
+			cells[cy][cx].testvar = "genbreak"
+			break
+		elseif not ((cells[cy][cx].ctype == 37 and cells[cy][cx].rot%2 == direction%2) or cells[cy][cx].ctype == 38 or (cells[cy][cx].ctype == 48 and (cells[cy][cx].rot+2)%4 == direction)) then
+			if cells[cy][cx].ctype ~= 0 and cells[cy][cx].ctype ~= 40 then
+				local c = CopyCell(cx,cy)
+				c.rot = (c.rot+addedrot)%4
+				table.insert(copied,c)
+				cells[cy][cx].testvar = "gen'd"
+			else
+				cells[cy][cx].testvar = "genbreak"
+				break
+			end
+		end
+		cells[cy][cx].scrosses = (cells[cy][cx].supdatekey == supdatekey and cells[cy][cx].scrosses or 0) + 1
+		cells[cy][cx].supdatekey = supdatekey
+	end 
+	local self = CopyCell(x,y)
+	for i=1,#copied do
+		if not PushCell(x,y,dir,false,1,copied[i].ctype,copied[i].rot,copied[i].ctype == 19,{self.lastvars[1],self.lastvars[2],copied[i].rot},copied[i].protected,false) then
+			break
+		end
+	end
+end
+
+local function UpdateSuperGenerators()
+	local x,y = width-1,height-1
+	while x >= 0 do
+		while y >= 0 do
+			if GetChunk(x,y).hassupergenerator then
+				if not cells[y][x].updated and cells[y][x].ctype == 54 and cells[y][x].rot == 0 then
+					DoSuperGenerator(x,y,0)
+					supdatekey = supdatekey + 1
+				end
+				y = y - 1
+			else
+				y = math.floor(y/25)*25 - 1
+			end
+		end
+		y = height-1
+		x = x - 1
+	end
+	x,y = 0,0
+	while x < width do
+		while y < height do
+			if GetChunk(x,y).hassupergenerator then
+				if not cells[y][x].updated and cells[y][x].ctype == 54 and cells[y][x].rot == 2 then
+					DoSuperGenerator(x,y,2)
+					supdatekey = supdatekey + 1
+				end
+				y = y + 1
+			else
+				y = y + 25
+			end
+		end
+		y = 0
+		x = x + 1
+	end
+	x,y = 0,0
+	while y < height do
+		while x < width do
+			if GetChunk(x,y).hassupergenerator then
+				if not cells[y][x].updated and cells[y][x].ctype == 54 and cells[y][x].rot == 3 then
+					DoSuperGenerator(x,y,3)
+					supdatekey = supdatekey + 1
+				end
+				x = x + 1
+			else
+				x = x + 25
+			end
+		end
+		x = 0
+		y = y + 1
+	end
+	x,y = width-1,height-1
+	while y >= 0 do
+		while x >= 0 do
+			if GetChunk(x,y).hassupergenerator then
+				if not cells[y][x].updated and cells[y][x].ctype == 54 and cells[y][x].rot == 1 then
+					DoSuperGenerator(x,y,1)
+					supdatekey = supdatekey + 1
+				end
+				x = x - 1
+			else
+				x = math.floor(x/25)*25 - 1
+			end
+		end
+		x = width-1
+		y = y - 1
+	end
+end
+
 local function DoGenerator(x,y,dir,gendir,istwist,dontupdate)
 	gendir = gendir or dir
 	local direction = (dir+2)%4
@@ -1652,16 +1848,10 @@ local function DoGenerator(x,y,dir,gendir,istwist,dontupdate)
 				elseif gentype == 18 then gentype = 17 
 				elseif gentype == 25 then gentype = 26 genrot = (-genrot)%4
 				elseif gentype == 26 then gentype = 25 genrot = (-genrot)%4
-				elseif gentype == 6 and genrot%2 == 0 then genrot = (genrot + 1)%4
-				elseif gentype == 6 and genrot%2 == 1 then genrot = (genrot - 1)%4
-				elseif gentype == 22 and genrot%2 == 0 then genrot = (genrot + 1)%4
-				elseif gentype == 22 and genrot%2 == 1 then genrot = (genrot - 1)%4
-				elseif gentype == 15 and genrot%2 == 0 then genrot = (genrot - 1)%4
-				elseif gentype == 15 and genrot%2 == 1 then genrot = (genrot + 1)%4
-				elseif gentype == 30 and genrot%2 == 0 then genrot = (genrot - 1)%4
-				elseif gentype == 30 and genrot%2 == 1 then genrot = (genrot + 1)%4
-				elseif gentype == 45 and genrot%2 == 0 then genrot = (genrot + 1)%4
-				elseif gentype == 45 and genrot%2 == 1 then genrot = (genrot - 1)%4
+				elseif (gentype == 6 or gentype == 22 or gentype == 30 or gentype == 45 or gentype == 52) and genrot%2 == 0 then genrot = (genrot + 1)%4
+				elseif (gentype == 6 or gentype == 22 or gentype == 30 or gentype == 45 or gentype == 52) then genrot = (genrot - 1)%4
+				elseif (gentype == 15 or gentype == 56) and genrot%2 == 0 then genrot = (genrot - 1)%4
+				elseif (gentype == 15 or gentype == 56) then genrot = (genrot + 1)%4
 				else genrot = (-genrot)%4 end
 			else
 				if gentype == 8 then gentype = 9 
@@ -1670,16 +1860,10 @@ local function DoGenerator(x,y,dir,gendir,istwist,dontupdate)
 				elseif gentype == 18 then gentype = 17 
 				elseif gentype == 25 then gentype = 26 genrot = (-genrot + 2)%4
 				elseif gentype == 26 then gentype = 25 genrot = (-genrot + 2)%4
-				elseif gentype == 6 and genrot%2 == 0 then genrot = (genrot - 1)%4
-				elseif gentype == 6 and genrot%2 == 1 then genrot = (genrot + 1)%4
-				elseif gentype == 22 and genrot%2 == 0 then genrot = (genrot - 1)%4
-				elseif gentype == 22 and genrot%2 == 1 then genrot = (genrot + 1)%4
-				elseif gentype == 15 and genrot%2 == 0 then genrot = (genrot + 1)%4
-				elseif gentype == 15 and genrot%2 == 1 then genrot = (genrot - 1)%4
-				elseif gentype == 30 and genrot%2 == 0 then genrot = (genrot + 1)%4
-				elseif gentype == 30 and genrot%2 == 1 then genrot = (genrot - 1)%4
-				elseif gentype == 45 and genrot%2 == 0 then genrot = (genrot - 1)%4
-				elseif gentype == 45 and genrot%2 == 1 then genrot = (genrot + 1)%4
+				elseif (gentype == 6 or gentype == 22 or gentype == 30 or gentype == 45 or gentype == 52) and genrot%2 == 0 then genrot = (genrot - 1)%4
+				elseif (gentype == 6 or gentype == 22 or gentype == 30 or gentype == 45 or gentype == 52) then genrot = (genrot + 1)%4
+				elseif (gentype == 15 or gentype == 56) and genrot%2 == 0 then genrot = (genrot + 1)%4
+				elseif (gentype == 15 or gentype == 56) then genrot = (genrot - 1)%4
 				else genrot = (-genrot + 2)%4 end
 			end
 			PushCell(x,y,gendir,false,1,gentype,genrot,cells[cy][cx].ctype == 19,{cells[y][x].lastvars[1],cells[y][x].lastvars[2],genrot},cells[cy][cx].protected,false)
@@ -1957,16 +2141,10 @@ local function UpdateFlippers()
 						elseif cells[y][x+i].ctype == 18 then cells[y][x+i].ctype = 17 
 						elseif cells[y][x+i].ctype == 25 then cells[y][x+i].ctype = 26 cells[y][x+i].rot = (-cells[y][x+i].rot + 2)%4
 						elseif cells[y][x+i].ctype == 26 then cells[y][x+i].ctype = 25 cells[y][x+i].rot = (-cells[y][x+i].rot + 2)%4
-						elseif cells[y][x+i].ctype == 6 and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
-						elseif cells[y][x+i].ctype == 6 and cells[y][x+i].rot%2 == 1 then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
-						elseif cells[y][x+i].ctype == 22 and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
-						elseif cells[y][x+i].ctype == 22 and cells[y][x+i].rot%2 == 1 then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
-						elseif cells[y][x+i].ctype == 15 and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
-						elseif cells[y][x+i].ctype == 15 and cells[y][x+i].rot%2 == 1 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
-						elseif cells[y][x+i].ctype == 30 and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
-						elseif cells[y][x+i].ctype == 30 and cells[y][x+i].rot%2 == 1 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
-						elseif cells[y][x+i].ctype == 45 and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
-						elseif cells[y][x+i].ctype == 45 and cells[y][x+i].rot%2 == 1 then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
+						elseif (cells[y][x+i].ctype == 6 or cells[y][x+i].ctype == 22 or cells[y][x+i].ctype == 30 or cells[y][x+i].ctype == 45 or cells[y][x+i].ctype == 52) and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
+						elseif (cells[y][x+i].ctype == 6 or cells[y][x+i].ctype == 22 or cells[y][x+i].ctype == 30 or cells[y][x+i].ctype == 45 or cells[y][x+i].ctype == 52) then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
+						elseif (cells[y][x+i].ctype == 15 or cells[y][x+i].ctype == 56) and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
+						elseif (cells[y][x+i].ctype == 15 or cells[y][x+i].ctype == 56) and cells[y][x+i].rot%2 == 1 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
 						else cells[y][x+i].rot = (-cells[y][x+i].rot + 2)%4 end
 					end
 					for i=-1,1,2 do
@@ -1976,16 +2154,10 @@ local function UpdateFlippers()
 						elseif cells[y+i][x].ctype == 18 then cells[y+i][x].ctype = 17 
 						elseif cells[y+i][x].ctype == 25 then cells[y+i][x].ctype = 26 cells[y+i][x].rot = (-cells[y+i][x].rot + 2)%4
 						elseif cells[y+i][x].ctype == 26 then cells[y+i][x].ctype = 25 cells[y+i][x].rot = (-cells[y+i][x].rot + 2)%4
-						elseif cells[y+i][x].ctype == 6 and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
-						elseif cells[y+i][x].ctype == 6 and cells[y+i][x].rot%2 == 1 then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
-						elseif cells[y+i][x].ctype == 22 and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
-						elseif cells[y+i][x].ctype == 22 and cells[y+i][x].rot%2 == 1 then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
-						elseif cells[y+i][x].ctype == 15 and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
-						elseif cells[y+i][x].ctype == 15 and cells[y+i][x].rot%2 == 1 then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
-						elseif cells[y+i][x].ctype == 30 and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
-						elseif cells[y+i][x].ctype == 30 and cells[y+i][x].rot%2 == 1 then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
-						elseif cells[y+i][x].ctype == 45 and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
-						elseif cells[y+i][x].ctype == 45 and cells[y+i][x].rot%2 == 1 then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
+						elseif (cells[y+i][x].ctype == 6 or cells[y+i][x].ctype == 22 or cells[y+i][x].ctype == 30 or cells[y+i][x].ctype == 45 or cells[y+i][x].ctype == 52) and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
+						elseif (cells[y+i][x].ctype == 6 or cells[y+i][x].ctype == 22 or cells[y+i][x].ctype == 30 or cells[y+i][x].ctype == 45 or cells[y+i][x].ctype == 52) then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
+						elseif (cells[y+i][x].ctype == 15 or cells[y+i][x].ctype == 56) and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
+						elseif (cells[y+i][x].ctype == 15 or cells[y+i][x].ctype == 56) then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
 						else cells[y+i][x].rot = (-cells[y+i][x].rot + 2)%4 end
 					end
 				elseif not cells[y][x].updated and cells[y][x].ctype == 29 then
@@ -1996,16 +2168,10 @@ local function UpdateFlippers()
 						elseif cells[y][x+i].ctype == 18 then cells[y][x+i].ctype = 17 
 						elseif cells[y][x+i].ctype == 25 then cells[y][x+i].ctype = 26 cells[y][x+i].rot = (-cells[y][x+i].rot - 2)%4
 						elseif cells[y][x+i].ctype == 26 then cells[y][x+i].ctype = 25 cells[y][x+i].rot = (-cells[y][x+i].rot - 2)%4
-						elseif cells[y][x+i].ctype == 6 and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
-						elseif cells[y][x+i].ctype == 6 and cells[y][x+i].rot%2 == 1 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
-						elseif cells[y][x+i].ctype == 22 and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
-						elseif cells[y][x+i].ctype == 22 and cells[y][x+i].rot%2 == 1 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
-						elseif cells[y][x+i].ctype == 15 and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
-						elseif cells[y][x+i].ctype == 15 and cells[y][x+i].rot%2 == 1 then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
-						elseif cells[y][x+i].ctype == 30 and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
-						elseif cells[y][x+i].ctype == 30 and cells[y][x+i].rot%2 == 1 then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
-						elseif cells[y][x+i].ctype == 45 and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
-						elseif cells[y][x+i].ctype == 45 and cells[y][x+i].rot%2 == 1 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
+						elseif (cells[y][x+i].ctype == 6 or cells[y][x+i].ctype == 22 or cells[y][x+i].ctype == 30 or cells[y][x+i].ctype == 45 or cells[y][x+i].ctype == 52) and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
+						elseif (cells[y][x+i].ctype == 6 or cells[y][x+i].ctype == 22 or cells[y][x+i].ctype == 30 or cells[y][x+i].ctype == 45 or cells[y][x+i].ctype == 52) then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
+						elseif (cells[y][x+i].ctype == 15 or cells[y][x+i].ctype == 56) and cells[y][x+i].rot%2 == 0 then cells[y][x+i].rot = (cells[y][x+i].rot - 1)%4
+						elseif (cells[y][x+i].ctype == 15 or cells[y][x+i].ctype == 56) then cells[y][x+i].rot = (cells[y][x+i].rot + 1)%4
 						else cells[y][x+i].rot = (-cells[y][x+i].rot)%4 end
 					end
 					for i=-1,1,2 do
@@ -2015,16 +2181,10 @@ local function UpdateFlippers()
 						elseif cells[y+i][x].ctype == 18 then cells[y+i][x].ctype = 17 
 						elseif cells[y+i][x].ctype == 25 then cells[y+i][x].ctype = 26 cells[y+i][x].rot = (-cells[y+i][x].rot)%4
 						elseif cells[y+i][x].ctype == 26 then cells[y+i][x].ctype = 25 cells[y+i][x].rot = (-cells[y+i][x].rot)%4
-						elseif cells[y+i][x].ctype == 6 and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
-						elseif cells[y+i][x].ctype == 6 and cells[y+i][x].rot%2 == 1 then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
-						elseif cells[y+i][x].ctype == 22 and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
-						elseif cells[y+i][x].ctype == 22 and cells[y+i][x].rot%2 == 1 then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
-						elseif cells[y+i][x].ctype == 15 and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
-						elseif cells[y+i][x].ctype == 15 and cells[y+i][x].rot%2 == 1 then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
-						elseif cells[y+i][x].ctype == 30 and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
-						elseif cells[y+i][x].ctype == 30 and cells[y+i][x].rot%2 == 1 then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
-						elseif cells[y+i][x].ctype == 45 and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
-						elseif cells[y+i][x].ctype == 45 and cells[y+i][x].rot%2 == 1 then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
+						elseif (cells[y+i][x].ctype == 6 or cells[y+i][x].ctype == 22 or cells[y+i][x].ctype == 30 or cells[y+i][x].ctype == 45 or cells[y+i][x].ctype == 52) and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
+						elseif (cells[y+i][x].ctype == 6 or cells[y+i][x].ctype == 22 or cells[y+i][x].ctype == 30 or cells[y+i][x].ctype == 45 or cells[y+i][x].ctype == 52) then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
+						elseif (cells[y+i][x].ctype == 15 or cells[y+i][x].ctype == 56) and cells[y+i][x].rot%2 == 0 then cells[y+i][x].rot = (cells[y+i][x].rot - 1)%4
+						elseif (cells[y+i][x].ctype == 15 or cells[y+i][x].ctype == 56) then cells[y+i][x].rot = (cells[y+i][x].rot + 1)%4
 						else cells[y+i][x].rot = (-cells[y+i][x].rot)%4 end
 					end
 				end
@@ -2040,6 +2200,41 @@ end
 
 local function UpdateRotators()
 	local x,y = 0,0
+	while y < height do
+		while x < width do
+			if GetChunk(x,y).hasrotator then
+				if not cells[y][x].updated and cells[y][x].ctype == 56 then
+					if cells[y][x].rot == 0 then
+						cells[y][x+1].rot = (cells[y][x+1].rot + 1)%4
+						cells[y+1][x].rot = (cells[y+1][x].rot + 1)%4
+						cells[y][x-1].rot = (cells[y][x-1].rot - 1)%4
+						cells[y-1][x].rot = (cells[y-1][x].rot - 1)%4
+					elseif cells[y][x].rot == 1 then
+						cells[y][x+1].rot = (cells[y][x+1].rot - 1)%4
+						cells[y+1][x].rot = (cells[y+1][x].rot + 1)%4
+						cells[y][x-1].rot = (cells[y][x-1].rot + 1)%4
+						cells[y-1][x].rot = (cells[y-1][x].rot - 1)%4
+					elseif cells[y][x].rot == 2 then
+						cells[y][x+1].rot = (cells[y][x+1].rot - 1)%4
+						cells[y+1][x].rot = (cells[y+1][x].rot - 1)%4
+						cells[y][x-1].rot = (cells[y][x-1].rot + 1)%4
+						cells[y-1][x].rot = (cells[y-1][x].rot + 1)%4
+					else
+						cells[y][x+1].rot = (cells[y][x+1].rot + 1)%4
+						cells[y+1][x].rot = (cells[y+1][x].rot - 1)%4
+						cells[y][x-1].rot = (cells[y][x-1].rot - 1)%4
+						cells[y-1][x].rot = (cells[y-1][x].rot + 1)%4
+					end
+				end
+				x = x + 1
+			else
+				x = x + 25
+			end
+		end
+		y = y + 1
+		x = 0
+	end
+	x,y = 0,0
 	while y < height do
 		while x < width do
 			if GetChunk(x,y).hasrotator then
@@ -2080,7 +2275,7 @@ local function UpdateGears()
 						if i ~= 4 then
 							cx = i%3-1
 							cy = math.floor(i/3)-1
-							if cells[y+cy][x+cx].ctype == -1 or cells[y+cy][x+cx].ctype == 40 or cells[y+cy][x+cx].ctype == 17 or cells[y+cy][x+cx].ctype == 18 or cells[y+cy][x+cx].ctype == 11 then
+							if cells[y+cy][x+cx].ctype == -1 or cells[y+cy][x+cx].ctype == 40 or cells[y+cy][x+cx].ctype == 17 or cells[y+cy][x+cx].ctype == 18 or cells[y+cy][x+cx].ctype == 11 or cells[y+cy][x+cx].ctype == 50 then
 								jammed = true
 							end
 						end
@@ -2138,7 +2333,7 @@ local function UpdateGears()
 						if i ~= 4 then
 							cx = i%3-1
 							cy = math.floor(i/3)-1
-							if cells[y+cy][x+cx].ctype == -1 or cells[y+cy][x+cx].ctype == 40 or cells[y+cy][x+cx].ctype == 17 or cells[y+cy][x+cx].ctype == 18 or cells[y+cy][x+cx].ctype == 11 then
+							if cells[y+cy][x+cx].ctype == -1 or cells[y+cy][x+cx].ctype == 40 or cells[y+cy][x+cx].ctype == 17 or cells[y+cy][x+cx].ctype == 18 or cells[y+cy][x+cx].ctype == 11 or cells[y+cy][x+cx].ctype == 50 then
 								jammed = true
 							end
 						end
@@ -2211,43 +2406,332 @@ end
 
 local function UpdateImpulsers()
 	local x,y = 0,0
+	while x < width do
+		while y < height do
+			if GetChunk(x,y).hasimpulser then
+				if not cells[y][x].updated and cells[y][x].ctype == 28 then
+					if x > 1 then PullCell(x-2,y,0,false,1) end
+				end
+				y = y + 1
+			else
+				y = y + 25
+			end
+		end
+		y = 0
+		x = x + 1
+	end
+	x,y = width-1,height-1
+	while x >= 0 do
+		while y >= 0 do
+			if GetChunk(x,y).hasimpulser then
+				if not cells[y][x].updated and cells[y][x].ctype == 28 then
+					if x < width-2 then PullCell(x+2,y,2,false,1) end
+				end
+				y = y - 1
+			else
+				y = math.floor(y/25)*25 - 1
+			end
+		end
+		y = height-1
+		x = x - 1
+	end
+	x,y = width-1,height-1
+	while y >= 0 do
+		while x >= 0 do
+			if GetChunk(x,y).hasimpulser then
+				if not cells[y][x].updated and cells[y][x].ctype == 28 then
+					if y < height-2 then PullCell(x,y+2,3,false,1) end
+				end
+				x = x - 1
+			else
+				x = math.floor(x/25)*25 - 1
+			end
+		end
+		x = width-1
+		y = y - 1
+	end
+	x,y = 0,0
 	while y < height do
 		while x < width do
 			if GetChunk(x,y).hasimpulser then
 				if not cells[y][x].updated and cells[y][x].ctype == 28 then
-					if x > 1 then 			PullCell(x-2,y,0,false,1) end
-					if x < width-2 then 	PullCell(x+2,y,2,false,1) end
-					if y < height-2 then 	PullCell(x,y+2,3,false,1) end
-					if y > 1 then 			PullCell(x,y-2,1,false,1) end
+					if y > 1 then PullCell(x,y-2,1,false,1) end
 				end
 				x = x + 1
 			else
 				x = x + 25
 			end
 		end
-		y = y + 1
 		x = 0
+		y = y + 1
 	end
 end
 
 local function UpdateRepulsers()
-	local x,y = 0,0
+	local x,y = width-1,height-1
+	while x >= 0 do
+		while y >= 0 do
+			if GetChunk(x,y).hasrepulser then
+				if not cells[y][x].updated and cells[y][x].ctype == 20 then
+					PushCell(x,y,0)
+				end
+				y = y - 1
+			else
+				y = math.floor(y/25)*25 - 1
+			end
+		end
+		y = height-1
+		x = x - 1
+	end
+	x,y = 0,0
+	while x < width do
+		while y < height do
+			if GetChunk(x,y).hasrepulser then
+				if not cells[y][x].updated and cells[y][x].ctype == 20 then
+					PushCell(x,y,2)
+				end
+				y = y + 1
+			else
+				y = y + 25
+			end
+		end
+		y = 0
+		x = x + 1
+	end
+	x,y = 0,0
 	while y < height do
 		while x < width do
 			if GetChunk(x,y).hasrepulser then
 				if not cells[y][x].updated and cells[y][x].ctype == 20 then
-					PushCell(x,y,0)
-					PushCell(x,y,2)
 					PushCell(x,y,3)
-					PushCell(x,y,1)
 				end
 				x = x + 1
 			else
 				x = x + 25
 			end
 		end
-		y = y + 1
 		x = 0
+		y = y + 1
+	end
+	x,y = width-1,height-1
+	while y >= 0 do
+		while x >= 0 do
+			if GetChunk(x,y).hasrepulser then
+				if not cells[y][x].updated and cells[y][x].ctype == 20 then
+					PushCell(x,y,1)
+				end
+				x = x - 1
+			else
+				x = math.floor(x/25)*25 - 1
+			end
+		end
+		x = width-1
+		y = y - 1
+	end
+end
+
+local function DoSuperRepulser(x,y,dir)
+	local cx,cy,direction = x,y,dir
+	while true do
+		while true do
+			if direction == 0 then
+				cx = cx + 1	
+			elseif direction == 2 then
+				cx = cx - 1
+			elseif direction == 3 then
+				cy = cy - 1
+			elseif direction == 1 then
+				cy = cy + 1
+			end
+			if cells[cy][cx].ctype == 15 and ((cells[cy][cx].rot+2)%4 == direction or (cells[cy][cx].rot+3)%4 == direction) then
+				local olddir = direction
+				if (cells[cy][cx].rot+3)%4 == direction then
+					direction = (direction+1)%4
+				else
+					direction = (direction-1)%4
+				end
+			elseif cells[cy][cx].ctype == 30 then
+				local olddir = direction
+				if (cells[cy][cx].rot+3)%2 == direction%2 then
+					direction = (direction+1)%4
+				else
+					direction = (direction-1)%4
+				end
+			elseif not ((cells[cy][cx].ctype == 37 and cells[cy][cx].rot%2 == direction%2) or cells[cy][cx].ctype == 38) then
+				break
+			end
+		end 
+		if cells[cy][cx].ctype ~= 0 and cells[cy][cx].ctype ~= 11 and cells[cy][cx].ctype ~= 50 and cells[cy][cx].ctype ~= 12 and cells[cy][cx].ctype ~= 23 and (cells[cy][cx].rot ~= (direction+2)%4 or cells[cy][cx].ctype ~= 43)
+		and (cells[cy][cx].ctype ~= 47 and cells[cy][cx].ctype ~= 48 or cells[cy][cx].rot ~= direction) and (cells[cy][cx].ctype < 31 or cells[cy][cx].ctype > 36 or cells[cy][cx].rot%2 == direction%2) then
+			cells[cy][cx].scrosses = (cells[cy][cx].supdatekey == supdatekey and cells[cy][cx].scrosses or 0) + 1
+			cells[cy][cx].supdatekey = supdatekey
+			if cells[cy][cx].scrosses >= 3 then
+				cells[cy][cx].testvar = "loop"
+				break
+			end
+			if direction == 0 then cx = cx - 1 elseif direction == 2 then cx = cx + 1 end
+			if direction == 1 then cy = cy - 1 elseif direction == 3 then cy = cy + 1 end
+			if not PushCell(cx,cy,direction,true,999999999999999999) then
+				break
+			end
+			if direction == 0 then cx = cx + 1 elseif direction == 2 then cx = cx - 1 end
+			if direction == 1 then cy = cy + 1 elseif direction == 3 then cy = cy - 1 end
+		else
+			cells[cy][cx].testvar = "break"
+			break
+		end
+	end
+end
+
+local function UpdateSuperRepulsers()
+	local x,y = width-1,height-1
+	while x >= 0 do
+		while y >= 0 do
+			if GetChunk(x,y).hassuperrep then
+				if not cells[y][x].updated and cells[y][x].ctype == 49 then
+					DoSuperRepulser(x,y,0)
+					supdatekey = supdatekey + 1
+				end
+				y = y - 1
+			else
+				y = math.floor(y/25)*25 - 1
+			end
+		end
+		y = height-1
+		x = x - 1
+	end
+	x,y = 0,0
+	while x < width do
+		while y < height do
+			if GetChunk(x,y).hassuperrep then
+				if not cells[y][x].updated and cells[y][x].ctype == 49 then
+					DoSuperRepulser(x,y,2)
+					supdatekey = supdatekey + 1
+				end
+				y = y + 1
+			else
+				y = y + 25
+			end
+		end
+		y = 0
+		x = x + 1
+	end
+	x,y = 0,0
+	while y < height do
+		while x < width do
+			if GetChunk(x,y).hassuperrep then
+				if not cells[y][x].updated and cells[y][x].ctype == 49 then
+					DoSuperRepulser(x,y,3)
+					supdatekey = supdatekey + 1
+				end
+				x = x + 1
+			else
+				x = x + 25
+			end
+		end
+		x = 0
+		y = y + 1
+	end
+	x,y = width-1,height-1
+	while y >= 0 do
+		while x >= 0 do
+			if GetChunk(x,y).hassuperrep then
+				if not cells[y][x].updated and cells[y][x].ctype == 49 then
+					DoSuperRepulser(x,y,1)
+					supdatekey = supdatekey + 1
+				end
+				x = x - 1
+			else
+				x = math.floor(x/25)*25 - 1
+			end
+		end
+		x = width-1
+		y = y - 1
+	end
+end
+
+local function DoDriller(x,y,dir)
+	local x2,y2 = x,y
+	if dir == 0 then x2 = x+1 elseif dir == 2 then x2 = x-1 end
+	if dir == 1 then y2 = y+1 elseif dir == 3 then y2 = y-1 end
+	if cells[y2][x2].ctype ~= 11 and cells[y2][x2].ctype ~= 50 and cells[y2][x2].ctype ~= -1 and cells[y2][x2].ctype ~= 40 then
+		local oldcell = CopyCell(x,y)
+		cells[y][x] = CopyCell(x2,y2)
+		cells[y2][x2] = oldcell
+		SetChunk(x,y,cells[y][x].ctype)
+		SetChunk(x2,y2,cells[y2][x2].ctype)
+	elseif cells[y2][x2].ctype == 11 or cells[y2][x2].ctype == 50 then
+		cells[y][x].ctype = 0
+		if cells[y2][x2].ctype == 50 then
+			if x2 < width-1 and (not cells[y2][x2+1].protected and cells[y2][x2+1].ctype ~= -1 and cells[y2][x2+1].ctype ~= 11 and cells[y2][x2+1].ctype ~= 40 and cells[y2][x2+1].ctype ~= 50) then cells[y2][x2+1].ctype = 0 end
+			if x2 > 0 and (not cells[y2][x2-1].protected and cells[y2][x2-1].ctype ~= -1 and cells[y2][x2-1].ctype ~= 11 and cells[y2][x2-1].ctype ~= 40 and cells[y2][x2-1].ctype ~= 50) then cells[y2][x2-1].ctype = 0 end
+			if y2 < height-1 and (not cells[y2+1][x2].protected and cells[y2+1][x2].ctype ~= -1 and cells[y2+1][x2].ctype ~= 11 and cells[y2+1][x2].ctype ~= 40 and cells[y2+1][x2].ctype ~= 50) then cells[y2+1][x2].ctype = 0 end
+			if y2 > 0 and (not cells[y2-1][x2].protected and cells[y2-1][x2].ctype ~= -1 and cells[y2-1][x2].ctype ~= 11 and cells[y2-1][x2].ctype ~= 40 and cells[y2-1][x2].ctype ~= 50) then cells[y2-1][x2].ctype = 0 end
+		end
+		love.audio.play(destroysound)
+	end
+end
+
+local function UpdateDrillers()
+	local x,y = width-1,height-1
+	while x >= 0 do
+		while y >= 0 do
+			if GetChunk(x,y).hasdriller then
+				if not cells[y][x].updated and cells[y][x].ctype == 57 and cells[y][x].rot == 0 then
+					DoDriller(x,y,0)
+				end
+				y = y - 1
+			else
+				y = math.floor(y/25)*25 - 1
+			end
+		end
+		y = height-1
+		x = x - 1
+	end
+	x,y = 0,0
+	while x < width do
+		while y < height do
+			if GetChunk(x,y).hasdriller then
+				if not cells[y][x].updated and cells[y][x].ctype == 57 and cells[y][x].rot == 2 then
+					DoDriller(x,y,2)
+				end
+				y = y + 1
+			else
+				y = y + 25
+			end
+		end
+		y = 0
+		x = x + 1
+	end
+	x,y = 0,0
+	while y < height do
+		while x < width do
+			if GetChunk(x,y).hasdriller then
+				if not cells[y][x].updated and cells[y][x].ctype == 57 and cells[y][x].rot == 3 then
+					DoDriller(x,y,3)
+				end
+				x = x + 1
+			else
+				x = x + 25
+			end
+		end
+		x = 0
+		y = y + 1
+	end
+	x,y = width-1,height-1
+	while y >= 0 do
+		while x >= 0 do
+			if GetChunk(x,y).hasdriller then
+				if not cells[y][x].updated and cells[y][x].ctype == 57 and cells[y][x].rot == 1 then
+					DoDriller(x,y,1)
+				end
+				x = x - 1
+			else
+				x = math.floor(x/25)*25 - 1
+			end
+		end
+		x = width-1
+		y = y - 1
 	end
 end
 
@@ -2582,6 +3066,47 @@ local function UpdateGates()
 	end
 end
 
+--Basic structure of subticks:
+--"Super" versions of cells before their "normal" counterparts
+--Cells that both push and pull usually go before puller-only and pusher-only cells
+
+--Non-moving Cells
+	--Effect Cells (cells that give other cells a special effect, freezers first)
+	--Swapping Cells (cells that swap positions of cells (aka cells that can move semi-immovables like gates), excluding gears because they are somewhat like rotators)
+	--Generating Cells (cells that are similar to generators, excluding gates, and including intakers for the sake of being the "opposite" of a generator)
+	--Rotating Cells (cells that affect rotation)
+	--Force Cells (cells that apply a force like pushing or pulling)
+		--Pulling Cells 
+		--Pushing Cells
+--Moving Cells
+	--Swapping Cells
+	--Pulling Cells
+	--Pushing Cells
+--Gates (because the input variables dont carry over to the next tick, so they need to be at the end in order to register anything that could activate an input)
+
+local subticks = {
+UpdateFreezers,
+UpdateShields,
+UpdateMirrors,
+UpdateIntakers,
+UpdateSuperGenerators,
+UpdateGenerators,
+UpdateReplicators,
+UpdateMold,
+UpdateFlippers,
+UpdateRotators,
+UpdateGears,
+UpdateRedirectors,
+UpdateImpulsers,
+UpdateSuperRepulsers,
+UpdateRepulsers,
+UpdateDrillers,
+UpdateAdvancers,
+UpdatePullers,
+UpdateMovers,
+UpdateGates
+}
+
 local function DoTick()
 	if subtick then
 		if subtick == 0 then
@@ -2593,33 +3118,20 @@ local function DoTick()
 					cells[y][x].testvar = ""
 					cells[y][x].inl = false
 					cells[y][x].inr = false
-					cells[y][x].checkedbar = false
+					cells[y][x].scrosses = 0
 				end
 			end
-			UpdateFreezers()
-		elseif subtick == 1 then UpdateShields()
-		elseif subtick == 2 then UpdateMirrors()
-		elseif subtick == 3 then UpdateIntakers()
-		elseif subtick == 4 then UpdateGenerators()
-		elseif subtick == 5 then UpdateReplicators()
-		elseif subtick == 6 then UpdateMold()
-		elseif subtick == 7 then UpdateFlippers()
-		elseif subtick == 8 then UpdateRotators()
-		elseif subtick == 9 then UpdateGears()
-		elseif subtick == 10 then UpdateRedirectors()
-		elseif subtick == 11 then UpdateImpulsers()
-		elseif subtick == 12 then UpdateRepulsers()
-		elseif subtick == 13 then UpdateAdvancers()
-		elseif subtick == 14 then UpdatePullers()
-		elseif subtick == 15 then UpdateMovers()
-		elseif subtick == 16 then
-			UpdateGates()
+			subticks[subtick+1]()
+		elseif subtick == #subticks-1 then
+			subticks[subtick+1]()
 			ticknum = ticknum + 1
+		else
+			subticks[subtick+1]()
 		end
 		if ticknum == 25 then
 			RefreshChunks()
 		end
-		subtick = (subtick + 1)%17
+		subtick = (subtick + 1)%#subticks
 	else
 		for y=0,height-1 do
 			for x=0,width-1 do
@@ -2629,25 +3141,12 @@ local function DoTick()
 				cells[y][x].testvar = ""
 				cells[y][x].inl = false
 				cells[y][x].inr = false
+				cells[y][x].scrosses = 0
 			end
 		end
-		UpdateFreezers()
-		UpdateShields()
-		UpdateMirrors()
-		UpdateIntakers()
-		UpdateGenerators()
-		UpdateReplicators()
-		UpdateMold()
-		UpdateFlippers()
-		UpdateRotators()
-		UpdateGears()
-		UpdateRedirectors()
-		UpdateImpulsers()
-		UpdateRepulsers()
-		UpdateAdvancers()
-		UpdatePullers()
-		UpdateMovers()
-		UpdateGates()
+		for i=1,#subticks do
+			subticks[i]()
+		end
 		ticknum = ticknum + 1
 		if ticknum == 25 then
 			RefreshChunks()
@@ -2673,6 +3172,8 @@ function love.load()
 					initial[y][x] = {ctype = 40, rot = 0}
 				elseif border == 3 then
 					initial[y][x] = {ctype = 11, rot = 0}
+				elseif border == 4 then
+					initial[y][x] = {ctype = 50, rot = 0}
 				end
 			else
 				initial[y][x].ctype = 0
@@ -2707,7 +3208,7 @@ function love.update(dt)
 					volume = round((x-150)/5)/100
 					love.audio.setVolume(volume)
 				elseif y >= 265 and y <= 275 then
-					border = round((x-150)/(500/2))+1
+					border = round((x-150)/(500/3))+1
 				end
 			end
 		end
@@ -2715,6 +3216,7 @@ function love.update(dt)
 		if not paused then
 			dtime = dtime + dt
 			if updatekey > 10000000000 then updatekey = 0 end --juuuust in case
+			if supdatekey > 10000000000 then supdatekey = 0 end
 			if dtime > delay then
 				for y=0,height-1 do
 					for x=0,width-1 do
@@ -2834,12 +3336,12 @@ function love.draw()
 	love.graphics.setColor(1/8,1/8,1/8)
 	love.graphics.rectangle("fill",-10,-10,9999,9999)
 	love.graphics.setColor(1,1,1)
-	love.graphics.draw(bgsprites,math.floor(zoom-offx+zoom/2),math.floor(zoom-offy+zoom/2),0,zoom/20,zoom/20,10,10)
+	love.graphics.draw(bgsprites,math.floor(zoom-offx+zoom/2),math.floor(zoom-offy+zoom/2),0,zoom/texsize[-1].w,zoom/texsize[-1].h,texsize[-1].w2,texsize[-1].h2)
 	if currentstate ~= -2 then
 		for y=math.max(math.floor(offy/zoom)-1,0),math.min(math.floor((offy+600*winym)/zoom)+1,height-1) do
 			for x=math.max(math.floor(offx/zoom)-1,0),math.min(math.floor((offx+800*winxm)/zoom)+1,width-1) do
 				if placeables[y][x] then 
-					love.graphics.draw(tex[-2],math.floor(x*zoom-offx+zoom/2),math.floor(y*zoom-offy+zoom/2),0,zoom/20,zoom/20,10,10)
+					love.graphics.draw(tex[-2],math.floor(x*zoom-offx+zoom/2),math.floor(y*zoom-offy+zoom/2),0,zoom/texsize[-2].w,zoom/texsize[-2].h,texsize[-2].w2,texsize[-2].h2)
 				end
 			end
 		end
@@ -2847,7 +3349,7 @@ function love.draw()
 	for y=math.max(math.floor(offy/zoom)-1,0),math.min(math.floor((offy+600*winym)/zoom)+1,height-1) do
 		for x=math.max(math.floor(offx/zoom)-1,0),math.min(math.floor((offx+800*winxm)/zoom)+1,width-1) do
 			if cells[y][x].ctype ~= 0 then 
-				love.graphics.draw((tex[cells[y][x].ctype] or tex.nonexistant),math.floor(lerp(cells[y][x].lastvars[1],x,itime/delay)*zoom-offx+zoom/2),math.floor(lerp(cells[y][x].lastvars[2],y,itime/delay)*zoom-offy+zoom/2),lerp(cells[y][x].lastvars[3],cells[y][x].lastvars[3]+((cells[y][x].rot-cells[y][x].lastvars[3]+2)%4-2),itime/delay)*math.pi/2,zoom/20,zoom/20,10,10)
+				love.graphics.draw((tex[cells[y][x].ctype] or tex.nonexistant),math.floor(lerp(cells[y][x].lastvars[1],x,itime/delay)*zoom-offx+zoom/2),math.floor(lerp(cells[y][x].lastvars[2],y,itime/delay)*zoom-offy+zoom/2),lerp(cells[y][x].lastvars[3],cells[y][x].lastvars[3]+((cells[y][x].rot-cells[y][x].lastvars[3]+2)%4-2),itime/delay)*math.pi/2,zoom/(texsize[cells[y][x].ctype] or texsize["nonexistant"]).w,zoom/(texsize[cells[y][x].ctype] or texsize["nonexistant"]).h,(texsize[cells[y][x].ctype] or texsize["nonexistant"]).w2,(texsize[cells[y][x].ctype] or texsize["nonexistant"]).h2)
 			end
 			if dodebug then
 				love.graphics.print(tostring(cells[y][x].testvar),x*zoom-offx+zoom/2,y*zoom-offy+zoom/2)
@@ -2858,7 +3360,7 @@ function love.draw()
 		for y=math.max(math.floor(offy/zoom)-1,0),math.min(math.floor((offy+600*winym)/zoom)+1,height-1) do
 			for x=math.max(math.floor(offx/zoom)-1,0),math.min(math.floor((offx+800*winxm)/zoom)+1,width-1) do
 				if placeables[y][x] then 
-					love.graphics.draw(tex[-2],math.floor(x*zoom-offx+zoom/2),math.floor(y*zoom-offy+zoom/2),0,zoom/20,zoom/20,10,10)
+					love.graphics.draw(tex[-2],math.floor(x*zoom-offx+zoom/2),math.floor(y*zoom-offy+zoom/2),0,zoom/texsize[-2].w,zoom/texsize[-2].h,texsize[-2].w2,texsize[-2].h2)
 				end
 			end
 		end
@@ -2870,8 +3372,8 @@ function love.draw()
 	if pasting then
 		for y=0,#copied do
 			for x=0,#copied[0] do
-				if copied[y][x].place then love.graphics.draw(tex[-2],math.floor((math.floor((love.mouse.getX()+offx)/zoom)+x)*zoom-offx+zoom/2),math.floor((math.floor((love.mouse.getY()+offy)/zoom)+y)*zoom-offy+zoom/2),0,zoom/20,zoom/20,10,10) end
-				love.graphics.draw((tex[copied[y][x].ctype] or tex.nonexistant),(math.floor((love.mouse.getX()+offx)/zoom)+x)*zoom-offx+zoom/2,(math.floor((love.mouse.getY()+offy)/zoom)+y)*zoom-offy+zoom/2,copied[y][x].rot*math.pi/2,zoom/20,zoom/20,10,10)
+				if copied[y][x].place then love.graphics.draw(tex[-2],math.floor((math.floor((love.mouse.getX()+offx)/zoom)+x)*zoom-offx+zoom/2),math.floor((math.floor((love.mouse.getY()+offy)/zoom)+y)*zoom-offy+zoom/2),0,zoom/texsize[-2].w,zoom/texsize[-2].h,texsize[-2].w2,texsize[-2].h2) end
+				love.graphics.draw((tex[copied[y][x].ctype] or tex.nonexistant),(math.floor((love.mouse.getX()+offx)/zoom)+x)*zoom-offx+zoom/2,(math.floor((love.mouse.getY()+offy)/zoom)+y)*zoom-offy+zoom/2,copied[y][x].rot*math.pi/2,zoom/(texsize[copied[y][x].ctype] or texsize["nonexistant"]).w,zoom/(texsize[copied[y][x].ctype] or texsize["nonexistant"]).h,(texsize[copied[y][x].ctype] or texsize["nonexistant"]).w2,(texsize[copied[y][x].ctype] or texsize["nonexistant"]).h2)
 			end
 		end
 		love.graphics.rectangle("line",math.floor((math.floor((love.mouse.getX()+offx)/zoom))*zoom-offx),math.floor((math.floor((love.mouse.getY()+offy)/zoom))*zoom-offy),(#copied[0]+1)*zoom,(#copied+1)*zoom)
@@ -2893,45 +3395,45 @@ function love.draw()
 	for i=0,15 do
 		if listorder[i+16*(page-1)+1] then
 			if currentstate == listorder[i+16*(page-1)+1] then love.graphics.setColor(1,1,1,1) else love.graphics.setColor(1,1,1,0.5) end
-			love.graphics.draw(tex[listorder[i+16*(page-1)+1]],(25+(775-25)*i/15)*winxm,575*winym,currentrot*math.pi/2,2*winxm,2*winxm,10,10)
+			love.graphics.draw(tex[listorder[i+16*(page-1)+1]],(25+(775-25)*i/15)*winxm,575*winym,currentrot*math.pi/2,40*winxm/texsize[listorder[i+16*(page-1)+1]].w,40*winxm/texsize[listorder[i+16*(page-1)+1]].h,texsize[listorder[i+16*(page-1)+1]].w2,texsize[listorder[i+16*(page-1)+1]].h2)
 		end
 	end
 	if paused then
 		love.graphics.setColor(0.5,0.5,0.5,0.75)
 		love.graphics.setColor(1,1,1,0.5)
-		love.graphics.draw(tex[1],725*winxm,25*winym,0,3*winxm,3*winxm)
+		love.graphics.draw(tex[1],725*winxm,25*winym,0,60*winxm/texsize[1].w,60*winxm/texsize[1].h)
 	else
 		love.graphics.setColor(1,1,1,0.5)
-		love.graphics.draw(tex[4],785*winxm,25*winym,math.pi/2,3*winxm,3*winxm)
+		love.graphics.draw(tex[4],785*winxm,25*winym,math.pi/2,60*winxm/texsize[4].w,60*winxm/texsize[4].h)
 	end
-	if undocells then love.graphics.draw(tex[27],725*winxm-150*winxm,25*winym,math.pi,3*winxm,3*winxm,20,20) end
-	love.graphics.draw(tex[16],725*winxm-75*winxm,25*winym,0,3*winxm,3*winxm)
-	love.graphics.draw(tex.menu,25*winxm,25*winym,0,winxm,winxm)
-	love.graphics.draw(tex.zoomin,100*winxm,25*winym,0,3*winxm,3*winxm)
-	love.graphics.draw(tex.zoomout,175*winxm,25*winym,0,3*winxm,3*winxm)
+	if undocells then love.graphics.draw(tex[27],725*winxm-150*winxm,25*winym,math.pi,60*winxm/texsize[27].w,60*winxm/texsize[27].h,texsize[27].w,texsize[27].h) end
+	love.graphics.draw(tex[16],725*winxm-75*winxm,25*winym,0,60*winxm/texsize[16].w,60*winxm/texsize[16].h)
+	love.graphics.draw(tex.menu,25*winxm,25*winym,0,60*winxm/texsize.menu.w,60*winxm/texsize.menu.h)
+	love.graphics.draw(tex.zoomin,100*winxm,25*winym,0,60*winxm/texsize.zoomin.w,60*winxm/texsize.zoomin.h)
+	love.graphics.draw(tex.zoomout,175*winxm,25*winym,0,60*winxm/texsize.zoomout.w,60*winxm/texsize.zoomout.h)
 	if selecting then 
-		love.graphics.draw(tex.copy,100*winxm,25*winym+75*winxm,0,3*winxm,3*winxm)
-		love.graphics.draw(tex.cut,175*winxm,25*winym+75*winxm,0,3*winxm,3*winxm)
+		love.graphics.draw(tex.copy,100*winxm,25*winym+75*winxm,0,60*winxm/texsize.copy.w,60*winxm/texsize.copy.h)
+		love.graphics.draw(tex.cut,175*winxm,25*winym+75*winxm,0,60*winxm/texsize.cut.w,60*winxm/texsize.cut.h)
 		love.graphics.setColor(1,1,1,0.75)
 	end
-	love.graphics.draw(tex.select,25*winxm,25*winym+75*winxm,0,3*winxm,3*winxm)
+	love.graphics.draw(tex.select,25*winxm,25*winym+75*winxm,0,60*winxm/texsize.select.w,60*winxm/texsize.select.h)
 	love.graphics.setColor(1,1,1,0.5)
 	if copied then
-		love.graphics.draw(tex.paste,25*winxm,25*winym+150*winxm,0,3*winxm,3*winxm)
-		love.graphics.draw(tex[14],100*winxm,25*winym+150*winxm,0,3*winxm,3*winxm)
-		love.graphics.draw(tex[14],235*winxm,25*winym+150*winxm,math.pi/2,3*winxm,3*winxm)
+		love.graphics.draw(tex.paste,25*winxm,25*winym+150*winxm,0,60*winxm/texsize.paste.w,60*winxm/texsize.paste.h)
+		love.graphics.draw(tex[14],100*winxm,25*winym+150*winxm,0,60*winxm/texsize[14].w,60*winxm/texsize[14].h)
+		love.graphics.draw(tex[14],235*winxm,25*winym+150*winxm,math.pi/2,60*winxm/texsize[14].w,60*winxm/texsize[14].h)
 	end
-	love.graphics.draw(tex[13],715*winxm,475*winym-80*winxm,-math.pi/2,2*winxm,2*winxm,20)
-	love.graphics.draw(tex[13],755*winxm,475*winym-40*winxm,0,2*winxm,2*winxm)
-	love.graphics.draw(tex[13],715*winxm,475*winym,math.pi/2,2*winxm,2*winxm,0,20)
-	love.graphics.draw(tex[13],675*winxm,475*winym-40*winxm,math.pi,2*winxm,2*winxm,20,20)
-	love.graphics.draw(tex[9],755*winxm,475*winym-80*winxm,0,2*winxm,2*winxm)
-	love.graphics.draw(tex[8],675*winxm,475*winym-80*winxm,0,2*winxm,2*winxm)
-	love.graphics.draw(tex[1],755*winxm,475*winym,0,2*winxm,2*winxm)
-	love.graphics.draw(tex[1],675*winxm,475*winym,math.pi,2*winxm,2*winxm,20,20)
+	love.graphics.draw(tex[13],715*winxm,475*winym-80*winxm,-math.pi/2,40*winxm/texsize[13].w,40*winxm/texsize[13].h,texsize[13].w)
+	love.graphics.draw(tex[13],755*winxm,475*winym-40*winxm,0,40*winxm/texsize[13].w,40*winxm/texsize[13].h)
+	love.graphics.draw(tex[13],715*winxm,475*winym,math.pi/2,40*winxm/texsize[13].w,40*winxm/texsize[13].h,0,texsize[13].h)
+	love.graphics.draw(tex[13],675*winxm,475*winym-40*winxm,math.pi,40*winxm/texsize[13].w,40*winxm/texsize[13].h,texsize[13].w,texsize[13].h)
+	love.graphics.draw(tex[9],755*winxm,475*winym-80*winxm,0,40*winxm/texsize[9].w,40*winxm/texsize[9].h)
+	love.graphics.draw(tex[8],675*winxm,475*winym-80*winxm,0,40*winxm/texsize[8].w,40*winxm/texsize[8].h)
+	love.graphics.draw(tex[1],755*winxm,475*winym,0,40*winxm/texsize[1].w,40*winxm/texsize[1].h)
+	love.graphics.draw(tex[1],675*winxm,475*winym,math.pi,40*winxm/texsize[1].w,40*winxm/texsize[1].h,texsize[1].w,texsize[1].h)
 	if not isinitial then
-		love.graphics.draw(tex[10],725*winxm,25*winym+75*winxm,0,3*winxm,3*winxm)
-		love.graphics.draw(tex.setinitial,725*winxm-150*winxm,25*winym+75*winxm,0,winxm,winxm)
+		love.graphics.draw(tex[10],725*winxm,25*winym+75*winxm,0,60*winxm/texsize[10].w,60*winxm/texsize[10].h)
+		love.graphics.draw(tex.setinitial,725*winxm-150*winxm,25*winym+75*winxm,0,135*winxm/texsize.setinitial.w,60*winxm/texsize.setinitial.h)
 	end
 	local x = love.mouse.getX()/winxm
 	local y = love.mouse.getY()/winym
@@ -2940,7 +3442,7 @@ function love.draw()
 		love.graphics.rectangle("fill",100*winxm,75*winym,600*winxm,450*winym)
 		love.graphics.setColor(1,1,1,1)
 		love.graphics.print("this is the menu",300*winxm,120*winym,0,2*winxm,2*winym)
-		love.graphics.print("CelLua Machine v1.3.1",330*winxm,90*winym,0,winxm,winym)
+		love.graphics.print("CelLua Machine v1.4.0",330*winxm,90*winym,0,winxm,winym)
 		love.graphics.print("by KyYay",365*winxm,105*winym,0,winxm,winym)
 		love.graphics.print("Update delay: "..string.sub(delay,1,4).."s",150*winxm,145*winym,0,winxm,winym)
 		love.graphics.print("Ticks per update: "..tpu,150*winxm,180*winym,0,winxm,winym)
@@ -2965,7 +3467,7 @@ function love.draw()
 		love.graphics.rectangle("fill",lerp(149,649,delay,true)*winxm,160*winym,2*winxm,10*winym)
 		love.graphics.rectangle("fill",lerp(149,649,(tpu-1)/9,true)*winxm,195*winym,2*winxm,10*winym)
 		love.graphics.rectangle("fill",lerp(149,649,volume,true)*winxm,230*winym,2*winxm,10*winym)
-		love.graphics.rectangle("fill",lerp(149,649,(border-1)/2,true)*winxm,265*winym,2*winxm,10*winym)
+		love.graphics.rectangle("fill",lerp(149,649,(border-1)/3,true)*winxm,265*winym,2*winxm,10*winym)
 		if dodebug then
 		love.graphics.polygon("fill",{180*winxm,378*winym ,177*winxm,380*winym ,190*winxm,393*winym ,193*winxm,390*winym})
 		love.graphics.polygon("fill",{190*winxm,378*winym ,193*winxm,380*winym ,180*winxm,393*winym ,177*winxm,390*winym}) end
@@ -2980,22 +3482,22 @@ function love.draw()
 		if typing == 1 then love.graphics.print(newwidth.."_",255*winxm,330*winym,0,winxm,winym) else love.graphics.print(newwidth,255*winxm,330*winym,0,winxm,winym) end
 		if typing == 2 then love.graphics.print(newheight.."_",455*winxm,330*winym,0,winxm,winym) else love.graphics.print(newheight,455*winxm,330*winym,0,winxm,winym) end
 		if x > 170 and y > 420 and x < 230 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Close menu\n     (Esc)",165*winxm,480*winym,0,winxm,winym) else love.graphics.setColor(1,1,1,0.5) end
-		love.graphics.draw(tex[1],200*winxm,450*winym,0,3*winxm,3*winym,10,10)
+		love.graphics.draw(tex[1],200*winxm,450*winym,0,60*winxm/texsize[1].w,60*winym/texsize[1].h,texsize[1].w2,texsize[1].h2)
 		if x > 270 and y > 420 and x < 330 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Restart level\n   (Ctrl+R)",265*winxm,480*winym,0,winxm,winym) else love.graphics.setColor(1,1,1,0.5) end
-		love.graphics.draw(tex[10],300*winxm,450*winym,0,3*winxm,3*winym,10,10)
+		love.graphics.draw(tex[10],300*winxm,450*winym,0,60*winxm/texsize[10].w,60*winym/texsize[10].h,texsize[10].w2,texsize[10].h2)
 		if x > 370 and y > 420 and x < 430 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Clear level",369*winxm,480*winym,0,winxm,winym) else love.graphics.setColor(1,1,1,0.5) end
-		love.graphics.draw(tex[11],400*winxm,450*winym,0,3*winxm,3*winym,10,10)
+		love.graphics.draw(tex[11],400*winxm,450*winym,0,60*winxm/texsize[11].w,60*winym/texsize[11].h,texsize[11].w2,texsize[11].h2)
 		if x > 470 and y > 420 and x < 530 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Save level",470*winxm,480*winym,0,winxm,winym) else love.graphics.setColor(1,1,1,0.5) end
-		love.graphics.draw(tex[2],500*winxm,450*winym,math.pi*1.5,3*winym,3*winxm,10,10)
+		love.graphics.draw(tex[2],500*winxm,450*winym,math.pi*1.5,60*winym/texsize[2].w,60*winxm/texsize[2].h,texsize[2].w2,texsize[2].h2)
 		if x > 570 and y > 420 and x < 630 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Load level\n(V3/K1/K2)",570*winxm,480*winym,0,winxm,winym)  else love.graphics.setColor(1,1,1,0.5) end
-		love.graphics.draw(tex[16],600*winxm,450*winym,math.pi*0.5,3*winym,3*winxm,10,10)
+		love.graphics.draw(tex[16],600*winxm,450*winym,math.pi*0.5,60*winym/texsize[16].w,60*winxm/texsize[16].h,texsize[16].w2,texsize[16].h2)
 	end
 	if showinstructions or inmenu then
 		love.graphics.setColor(1,1,1,1)
 		love.graphics.print("WASD = Move\n(Ctrl to speed up)\n\nQ/E = Rotate\n\nEsc = Menu\n\nZ/C = Change cell selection page\n\nSpace = Pause\n\nF = Advance one tick\n\nUp/down or mousewheel = Zoom in/out\n\nTab = Select\n\nOther shortcuts are obvious",10*winxm,300*winym,0,1*winxm,1*winym)
 	end
 	love.graphics.setColor(1,1,1,0.5)
-	love.graphics.print("FPS: ".. 1/delta,10,10)
+	love.graphics.print("FPS: ".. 1/delta,10,10) 
 	if typing then
 		love.keyboard.setTextInput(true)
 	else
@@ -3034,6 +3536,8 @@ function love.mousepressed(x,y,b)
 							initial[y][x] = {ctype = 40, rot = 0}
 						elseif border == 3 then
 							initial[y][x] = {ctype = 11, rot = 0}
+						elseif border == 4 then
+							initial[y][x] = {ctype = 50, rot = 0}
 						end
 					elseif x >= width-1 or y >= height-1 then
 						initial[y][x] = {ctype = 0, rot = 0}
@@ -3231,21 +3735,15 @@ function love.mousepressed(x,y,b)
 					elseif lastcop[y][selw-x].ctype == 18 then copied[y][x].ctype = 17 copied[y][x].rot = lastcop[y][selw-x].rot
 					elseif lastcop[y][selw-x].ctype == 25 then copied[y][x].ctype = 26 copied[y][x].rot = (-lastcop[y][selw-x].rot + 2)%4
 					elseif lastcop[y][selw-x].ctype == 26 then copied[y][x].ctype = 25 copied[y][x].rot = (-lastcop[y][selw-x].rot + 2)%4
-					elseif lastcop[y][selw-x].ctype == 6 and lastcop[y][selw-x].rot%2 == 0 then copied[y][x].rot = (lastcop[y][selw-x].rot - 1)%4
-					elseif lastcop[y][selw-x].ctype == 6 and lastcop[y][selw-x].rot%2 == 1 then copied[y][x].rot = (lastcop[y][selw-x].rot + 1)%4
-					elseif lastcop[y][selw-x].ctype == 22 and lastcop[y][selw-x].rot%2 == 0 then copied[y][x].rot = (lastcop[y][selw-x].rot - 1)%4
-					elseif lastcop[y][selw-x].ctype == 22 and lastcop[y][selw-x].rot%2 == 1 then copied[y][x].rot = (lastcop[y][selw-x].rot + 1)%4
-					elseif lastcop[y][selw-x].ctype == 15 and lastcop[y][selw-x].rot%2 == 0 then copied[y][x].rot = (lastcop[y][selw-x].rot + 1)%4
-					elseif lastcop[y][selw-x].ctype == 15 and lastcop[y][selw-x].rot%2 == 1 then copied[y][x].rot = (lastcop[y][selw-x].rot - 1)%4
-					elseif lastcop[y][selw-x].ctype == 30 and lastcop[y][selw-x].rot%2 == 0 then copied[y][x].rot = (lastcop[y][selw-x].rot + 1)%4
-					elseif lastcop[y][selw-x].ctype == 30 and lastcop[y][selw-x].rot%2 == 1 then copied[y][x].rot = (lastcop[y][selw-x].rot - 1)%4
-					elseif lastcop[y][selw-x].ctype == 45 and lastcop[y][selw-x].rot%2 == 0 then copied[y][x].rot = (lastcop[y][selw-x].rot - 1)%4
-					elseif lastcop[y][selw-x].ctype == 45 and lastcop[y][selw-x].rot%2 == 1 then copied[y][x].rot = (lastcop[y][selw-x].rot + 1)%4
+					elseif (lastcop[y][selw-x].ctype == 6 or lastcop[y][selw-x].ctype == 22 or lastcop[y][selw-x].ctype == 30 or lastcop[y][selw-x].ctype == 45 or lastcop[y][selw-x].ctype == 52) and lastcop[y][selw-x].rot%2 == 0 then copied[y][x].rot = (lastcop[y][selw-x].rot - 1)%4
+					elseif (lastcop[y][selw-x].ctype == 6 or lastcop[y][selw-x].ctype == 22 or lastcop[y][selw-x].ctype == 30 or lastcop[y][selw-x].ctype == 45 or lastcop[y][selw-x].ctype == 52) then copied[y][x].rot = (lastcop[y][selw-x].rot + 1)%4
+					elseif (lastcop[y][selw-x].ctype == 15 or lastcop[y][selw-x].ctype == 56) and lastcop[y][selw-x].rot%2 == 0 then copied[y][x].rot = (lastcop[y][selw-x].rot + 1)%4
+					elseif (lastcop[y][selw-x].ctype == 15 or lastcop[y][selw-x].ctype == 56) then copied[y][x].rot = (lastcop[y][selw-x].rot - 1)%4
 					else copied[y][x].rot = (-lastcop[y][selw-x].rot + 2)%4 end
 					copied[y][x].place = lastcop[y][selw-x].place
 				end
-			placecells = false
 			end
+			placecells = false
 		elseif x >= 175 and x <= 235 and y >= 25+150*(winxm/winym) and y <= 25+150*(winxm/winym)+60*(winxm/winym) and copied then
 			local lastcop = {}
 			local selh = #copied
@@ -3263,26 +3761,20 @@ function love.mousepressed(x,y,b)
 				for x=0,selw do
 					copied[y][x].ctype = lastcop[selh-y][x].ctype
 					if lastcop[selh-y][x].ctype == 8 then copied[y][x].ctype = 9 copied[y][x].rot = lastcop[selh-y][x].rot
-					elseif lastcop[(selh)-y][x].ctype == 9 then copied[y][x].ctype = 8 copied[y][x].rot = lastcop[selh-y][x].rot
-					elseif lastcop[(selh)-y][x].ctype == 17 then copied[y][x].ctype = 18 copied[y][x].rot = lastcop[selh-y][x].rot
-					elseif lastcop[(selh)-y][x].ctype == 18 then copied[y][x].ctype = 17 copied[y][x].rot = lastcop[selh-y][x].rot
+					elseif lastcop[selh-y][x].ctype == 9 then copied[y][x].ctype = 8 copied[y][x].rot = lastcop[selh-y][x].rot
+					elseif lastcop[selh-y][x].ctype == 17 then copied[y][x].ctype = 18 copied[y][x].rot = lastcop[selh-y][x].rot
+					elseif lastcop[selh-y][x].ctype == 18 then copied[y][x].ctype = 17 copied[y][x].rot = lastcop[selh-y][x].rot
 					elseif lastcop[selh-y][x].ctype == 25 then copied[y][x].ctype = 26 copied[y][x].rot = (-lastcop[selh-y][x].rot)%4
 					elseif lastcop[selh-y][x].ctype == 26 then copied[y][x].ctype = 25 copied[y][x].rot = (-lastcop[selh-y][x].rot)%4
-					elseif lastcop[selh-y][x].ctype == 6 and lastcop[selh-y][x].rot%2 == 0 then copied[y][x].rot = (lastcop[selh-y][x].rot + 1)%4
-					elseif lastcop[selh-y][x].ctype == 6 and lastcop[selh-y][x].rot%2 == 1 then copied[y][x].rot = (lastcop[selh-y][x].rot - 1)%4
-					elseif lastcop[selh-y][x].ctype == 22 and lastcop[selh-y][x].rot%2 == 0 then copied[y][x].rot = (lastcop[selh-y][x].rot + 1)%4
-					elseif lastcop[selh-y][x].ctype == 22 and lastcop[selh-y][x].rot%2 == 1 then copied[y][x].rot = (lastcop[selh-y][x].rot - 1)%4
-					elseif lastcop[selh-y][x].ctype == 15 and lastcop[selh-y][x].rot%2 == 0 then copied[y][x].rot = (lastcop[selh-y][x].rot - 1)%4
-					elseif lastcop[selh-y][x].ctype == 15 and lastcop[selh-y][x].rot%2 == 1 then copied[y][x].rot = (lastcop[selh-y][x].rot + 1)%4
-					elseif lastcop[selh-y][x].ctype == 30 and lastcop[selh-y][x].rot%2 == 0 then copied[y][x].rot = (lastcop[selh-y][x].rot - 1)%4
-					elseif lastcop[selh-y][x].ctype == 30 and lastcop[selh-y][x].rot%2 == 1 then copied[y][x].rot = (lastcop[selh-y][x].rot + 1)%4
-					elseif lastcop[selh-y][x].ctype == 45 and lastcop[selh-y][x].rot%2 == 0 then copied[y][x].rot = (lastcop[selh-y][x].rot + 1)%4
-					elseif lastcop[selh-y][x].ctype == 45 and lastcop[selh-y][x].rot%2 == 1 then copied[y][x].rot = (lastcop[selh-y][x].rot - 1)%4
+					elseif (lastcop[selh-y][x].ctype == 6 or lastcop[selh-y][x].ctype == 22 or lastcop[selh-y][x].ctype == 30 or lastcop[selh-y][x].ctype == 45 or lastcop[selh-y][x].ctype == 52) and lastcop[selh-y][x].rot%2 == 0 then copied[y][x].rot = (lastcop[selh-y][x].rot + 1)%4
+					elseif (lastcop[selh-y][x].ctype == 6 or lastcop[selh-y][x].ctype == 22 or lastcop[selh-y][x].ctype == 30 or lastcop[selh-y][x].ctype == 45 or lastcop[selh-y][x].ctype == 52) then copied[y][x].rot = (lastcop[selh-y][x].rot - 1)%4
+					elseif (lastcop[selh-y][x].ctype == 15 or lastcop[selh-y][x].ctype == 56) and lastcop[selh-y][x].rot%2 == 0 then copied[y][x].rot = (lastcop[selh-y][x].rot - 1)%4
+					elseif (lastcop[selh-y][x].ctype == 15 or lastcop[selh-y][x].ctype == 56) then copied[y][x].rot = (lastcop[selh-y][x].rot + 1)%4
 					else copied[y][x].rot = (-lastcop[selh-y][x].rot)%4 end
 					copied[y][x].place = lastcop[selh-y][x].place
 				end
-			placecells = false
 			end
+			placecells = false
 		elseif x >= 725-150 and x <= 725-150+60 and y >= 25 and y <= 25+60*(winxm/winym) then
 			if undocells then
 				for y=0,height-1 do
@@ -3333,6 +3825,8 @@ function love.mousepressed(x,y,b)
 							initial[y][x] = {ctype = 40, rot = 0}
 						elseif border == 3 then
 							initial[y][x] = {ctype = 11, rot = 0}
+						elseif border == 4 then
+							initial[y][x] = {ctype = 50, rot = 0}
 						end
 					elseif x >= width-1 or y >= height-1 then
 						initial[y][x] = {ctype = 0, rot = 0}
@@ -3599,6 +4093,8 @@ function love.keypressed(key)
 								initial[y][x] = {ctype = 40, rot = 0}
 							elseif border == 3 then
 								initial[y][x] = {ctype = 11, rot = 0}
+							elseif border == 4 then
+								initial[y][x] = {ctype = 50, rot = 0}
 							end
 						elseif x >= width-1 or y >= height-1 then
 							initial[y][x] = {ctype = 0, rot = 0}
