@@ -125,7 +125,7 @@ Super Generator Cell - Generates the entire row of cells behind it. Will not gen
 ![image](https://user-images.githubusercontent.com/71151507/129133932-584544b2-364e-4548-a6a4-94acb248be1f.png)
 
 Double Rotator Cell - Acts like a cw rotator on two sides, and like a ccw rotator on the other two. <br>
-![image](https://user-images.githubusercontent.com/71151507/129133999-c803ac2c-0313-4389-add9-d2cfde2141c6.png)
+![image](https://user-images.githubusercontent.com/71151507/129176904-791dd055-9d7e-4ab6-aca7-3c20311defec.png)
 
 Driller Cell - Acts sort of like a mirror cell, but it swaps the cell it's pointing to with itself (or deletes itself if it tries to swap a trash or demolisher cell). Has no actual pushing or pulling force. <br>
 ![image](https://user-images.githubusercontent.com/71151507/129170430-d7a0289d-6b17-4313-ba6f-87fee77297ee.png)
