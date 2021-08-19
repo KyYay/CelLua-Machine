@@ -3438,11 +3438,9 @@ function love.draw()
 	local x = love.mouse.getX()/winxm
 	local y = love.mouse.getY()/winym
 	local menufont = love.graphics.newFont(winxm*24)
-	local menufontsmall = love.graphics.newFont(winxm*11)
-	local sidebarfont = love.graphics.newFont(winxm*10)
+	local menufontsmall = love.graphics.newFont(winxm*10)
 	menufont:setFilter("nearest","nearest")
 	menufontsmall:setFilter("nearest","nearest")
-	sidebarfont:setFilter("nearest","nearest")
 	if inmenu then
 		love.graphics.setColor(0.5,0.5,0.5,0.5)
 		love.graphics.rectangle("fill",100*winxm,75*winym,600*winxm,450*winym)
@@ -3487,20 +3485,20 @@ function love.draw()
 		love.graphics.setColor(1,1,1,1)
 		if typing == 1 then love.graphics.print(newwidth.."_",menufontsmall,255*winxm,330*winym,0) else love.graphics.print(newwidth,menufontsmall,255*winxm,330*winym,0) end
 		if typing == 2 then love.graphics.print(newheight.."_",menufontsmall,455*winxm,330*winym,0) else love.graphics.print(newheight,menufontsmall,455*winxm,330*winym,0) end
-		if x > 170 and y > 420 and x < 230 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Close menu\n     (Esc)",165*winxm,480*winym,0,winxm,winym) else love.graphics.setColor(1,1,1,0.5) end
+		if x > 170 and y > 420 and x < 230 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Close menu\n     (Esc)",menufontsmall,165*winxm,480*winym,0) else love.graphics.setColor(1,1,1,0.5) end
 		love.graphics.draw(tex[1],200*winxm,450*winym,0,60*winxm/texsize[1].w,60*winym/texsize[1].h,texsize[1].w2,texsize[1].h2)
-		if x > 270 and y > 420 and x < 330 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Restart level\n   (Ctrl+R)",265*winxm,480*winym,0,winxm,winym) else love.graphics.setColor(1,1,1,0.5) end
+		if x > 270 and y > 420 and x < 330 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Restart level\n   (Ctrl+R)",menufontsmall,265*winxm,480*winym,0) else love.graphics.setColor(1,1,1,0.5) end
 		love.graphics.draw(tex[10],300*winxm,450*winym,0,60*winxm/texsize[10].w,60*winym/texsize[10].h,texsize[10].w2,texsize[10].h2)
-		if x > 370 and y > 420 and x < 430 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Clear level",369*winxm,480*winym,0,winxm,winym) else love.graphics.setColor(1,1,1,0.5) end
+		if x > 370 and y > 420 and x < 430 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Clear level",menufontsmall,369*winxm,480*winym,0) else love.graphics.setColor(1,1,1,0.5) end
 		love.graphics.draw(tex[11],400*winxm,450*winym,0,60*winxm/texsize[11].w,60*winym/texsize[11].h,texsize[11].w2,texsize[11].h2)
-		if x > 470 and y > 420 and x < 530 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Save level",470*winxm,480*winym,0,winxm,winym) else love.graphics.setColor(1,1,1,0.5) end
+		if x > 470 and y > 420 and x < 530 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Save level",menufontsmall,470*winxm,480*winym,0) else love.graphics.setColor(1,1,1,0.5) end
 		love.graphics.draw(tex[2],500*winxm,450*winym,math.pi*1.5,60*winym/texsize[2].w,60*winxm/texsize[2].h,texsize[2].w2,texsize[2].h2)
-		if x > 570 and y > 420 and x < 630 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Load level\n(V3/K1/K2)",570*winxm,480*winym,0,winxm,winym)  else love.graphics.setColor(1,1,1,0.5) end
+		if x > 570 and y > 420 and x < 630 and y < 480 then love.graphics.setColor(1,1,1,0.75) love.graphics.print("Load level\n(V3/K1/K2)",menufontsmall,570*winxm,480*winym,0)  else love.graphics.setColor(1,1,1,0.5) end
 		love.graphics.draw(tex[16],600*winxm,450*winym,math.pi*0.5,60*winym/texsize[16].w,60*winxm/texsize[16].h,texsize[16].w2,texsize[16].h2)
 	end
 	if showinstructions or inmenu then
 		love.graphics.setColor(1,1,1,1)
-		love.graphics.print("WASD = Move\n(Ctrl to speed up)\n\nQ/E = Rotate\n\nEsc = Menu\n\nZ/C = Change cell selection page\n\nSpace = Pause\n\nF = Advance one tick\n\nUp/down or mousewheel = Zoom in/out\n\nTab = Select\n\nOther shortcuts are obvious",sidebarfont,10*winxm,300*winym,0)
+		love.graphics.print("WASD = Move\n(Ctrl to speed up)\n\nQ/E = Rotate\n\nEsc = Menu\n\nZ/C = Change cell selection page\n\nSpace = Pause\n\nF = Advance one tick\n\nUp/down or mousewheel = Zoom in/out\n\nTab = Select\n\nOther shortcuts are obvious",menufontsmall,10*winxm,300*winym,0)
 	end
 	love.graphics.setColor(1,1,1,0.5)
 	love.graphics.print("FPS: ".. 1/delta,10,10) 
