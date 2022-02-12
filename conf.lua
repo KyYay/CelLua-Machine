@@ -12,4 +12,5 @@ function love.conf(t)
 	t.modules.physics = false
 	t.modules.video = false
 	t.modules.thread = false
+	t.window.fullscreen = love._os == "Android"
 end
